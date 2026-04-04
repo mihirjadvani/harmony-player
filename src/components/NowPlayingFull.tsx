@@ -18,6 +18,7 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
     currentSong,
     isPlaying,
     currentTime,
+    duration,
     shuffle,
     repeat,
     togglePlay,
@@ -30,7 +31,8 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
 
   if (!currentSong) return null;
 
-  const progress = currentSong.duration > 0 ? (currentTime / currentSong.duration) * 100 : 0;
+  const totalDuration = duration || currentSong.duration;
+  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
   const cycleRepeat = () => {
     const modes: Array<"off" | "all" | "one"> = ["off", "all", "one"];
