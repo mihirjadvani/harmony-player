@@ -1,16 +1,41 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { PlayerProvider } from "@/context/PlayerContext";
+import BottomNav from "@/components/BottomNav";
+import MiniPlayer from "@/components/MiniPlayer";
+import NowPlayingFull from "@/components/NowPlayingFull";
+import LibraryPage from "@/pages/LibraryPage";
+import PlaylistsPage from "@/pages/PlaylistsPage";
+import NowPlayingPage from "@/pages/NowPlayingPage";
+import SettingsPage from "@/pages/SettingsPage";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+type Tab = "library" | "playlists" | "nowplaying" | "settings";
+
+const Index = () => {
+  const [tab, setTab] = useState<Tab>("library");
+  const [showFullPlayer, setShowFullPlayer] = useState(false);
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
+    <PlayerProvider>
+      <div className="flex flex-col h-screen bg-background">
+        {/* Main content */}
+        <main className="flex-1 overflow-hidden">
+          {tab === "library" && <LibraryPage />}
+          {tab === "playlists" && <PlaylistsPage />}
+          {tab === "nowplaying" && <NowPlayingPage />}
+          {tab === "settings" && <SettingsPage />}
+        </main>
+
+        {/* Mini Player */}
+        {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
+
+        {/* Bottom Nav */}
+        <BottomNav active={tab} onChange={setTab} />
+
+        {/* Full-screen Now Playing overlay */}
+        {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
+      </div>
+    </PlayerProvider>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
