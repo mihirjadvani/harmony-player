@@ -16,6 +16,7 @@ const NowPlayingPage = () => {
     currentSong,
     isPlaying,
     currentTime,
+    duration,
     shuffle,
     repeat,
     queue,
