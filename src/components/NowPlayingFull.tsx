@@ -18,6 +18,7 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
     currentSong,
     isPlaying,
     currentTime,
+    duration,
     shuffle,
     repeat,
     togglePlay,
@@ -30,7 +31,8 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
 
   if (!currentSong) return null;
 
-  const progress = currentSong.duration > 0 ? (currentTime / currentSong.duration) * 100 : 0;
+  const totalDuration = duration || currentSong.duration;
+  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
   const cycleRepeat = () => {
     const modes: Array<"off" | "all" | "one"> = ["off", "all", "one"];
@@ -80,12 +82,12 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
             value={[progress]}
             max={100}
             step={0.1}
-            onValueChange={([val]) => seekTo((val / 100) * currentSong.duration)}
+            onValueChange={([val]) => seekTo((val / 100) * totalDuration)}
             className="mb-2"
           />
           <div className="flex justify-between">
             <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
-            <span className="text-xs text-muted-foreground">{formatTime(currentSong.duration)}</span>
+            <span className="text-xs text-muted-foreground">{formatTime(totalDuration)}</span>
           </div>
         </div>
 

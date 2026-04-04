@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { Song, PlayerState, RepeatMode } from "@/types/music";
 
 interface PlayerContextType extends PlayerState {
@@ -9,7 +9,6 @@ interface PlayerContextType extends PlayerState {
   seekTo: (time: number) => void;
   toggleShuffle: () => void;
   setRepeatMode: (mode: RepeatMode) => void;
-  setCurrentTime: (time: number) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -21,64 +20,145 @@ export const usePlayer = () => {
 };
 
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const [state, setState] = useState<PlayerState>({
     currentSong: null,
     isPlaying: false,
     currentTime: 0,
+    duration: 0,
     shuffle: false,
     repeat: "off",
     queue: [],
     queueIndex: -1,
   });
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Create audio element once
+  useEffect(() => {
+    const audio = new Audio();
+    audio.preload = "auto";
+    audioRef.current = audio;
 
-  const startTimer = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
+    audio.addEventListener("timeupdate", () => {
+      setState((prev) => ({ ...prev, currentTime: audio.currentTime }));
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      setState((prev) => ({
+        ...prev,
+        duration: audio.duration || prev.currentSong?.duration || 0,
+      }));
+    });
+
+    audio.addEventListener("ended", () => {
       setState((prev) => {
-        if (!prev.currentSong || !prev.isPlaying) return prev;
-        const next = prev.currentTime + 1;
-        if (next >= prev.currentSong.duration) {
-          clearInterval(intervalRef.current!);
-          return { ...prev, currentTime: 0, isPlaying: false };
+        // Auto-advance logic
+        if (prev.repeat === "one") {
+          audio.currentTime = 0;
+          audio.play();
+          return prev;
         }
-        return { ...prev, currentTime: next };
-      });
-    }, 1000);
-  }, []);
 
-  const stopTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
+        let nextIdx: number;
+        if (prev.shuffle) {
+          nextIdx = Math.floor(Math.random() * prev.queue.length);
+          if (nextIdx === prev.queueIndex && prev.queue.length > 1) {
+            nextIdx = (nextIdx + 1) % prev.queue.length;
+          }
+        } else {
+          nextIdx = prev.queueIndex + 1;
+        }
+
+        if (nextIdx >= prev.queue.length) {
+          if (prev.repeat === "all") {
+            nextIdx = 0;
+          } else {
+            return { ...prev, isPlaying: false, currentTime: 0 };
+          }
+        }
+
+        const nextSong = prev.queue[nextIdx];
+        if (nextSong?.audioSrc) {
+          audio.src = nextSong.audioSrc;
+          audio.play();
+        }
+
+        return {
+          ...prev,
+          currentSong: nextSong,
+          queueIndex: nextIdx,
+          currentTime: 0,
+          isPlaying: true,
+        };
+      });
+    });
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+    };
   }, []);
 
   const playSong = useCallback((song: Song, queue?: Song[]) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
     const q = queue || [song];
     const idx = q.findIndex((s) => s.id === song.id);
+
+    if (song.audioSrc) {
+      audio.src = song.audioSrc;
+      audio.play().catch(console.error);
+    }
+
     setState({
       currentSong: song,
       isPlaying: true,
       currentTime: 0,
+      duration: song.duration || 0,
       shuffle: false,
       repeat: "off",
       queue: q,
       queueIndex: idx >= 0 ? idx : 0,
     });
-    stopTimer();
-    startTimer();
-  }, [startTimer, stopTimer]);
+  }, []);
 
   const togglePlay = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
     setState((prev) => {
-      const next = !prev.isPlaying;
-      if (next) startTimer();
-      else stopTimer();
-      return { ...prev, isPlaying: next };
+      if (prev.isPlaying) {
+        audio.pause();
+      } else {
+        audio.play().catch(console.error);
+      }
+      return { ...prev, isPlaying: !prev.isPlaying };
     });
-  }, [startTimer, stopTimer]);
+  }, []);
+
+  const playByIndex = useCallback((idx: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    setState((prev) => {
+      const song = prev.queue[idx];
+      if (!song) return prev;
+
+      if (song.audioSrc) {
+        audio.src = song.audioSrc;
+        audio.play().catch(console.error);
+      }
+
+      return {
+        ...prev,
+        currentSong: song,
+        queueIndex: idx,
+        currentTime: 0,
+        isPlaying: true,
+      };
+    });
+  }, []);
 
   const getNextIndex = useCallback((prev: PlayerState): number => {
     if (prev.repeat === "one") return prev.queueIndex;
@@ -89,7 +169,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     const next = prev.queueIndex + 1;
     if (next >= prev.queue.length) {
-      return prev.repeat === "all" ? 0 : prev.queueIndex;
+      return prev.repeat === "all" ? 0 : -1;
     }
     return next;
   }, []);
@@ -97,39 +177,52 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const nextSong = useCallback(() => {
     setState((prev) => {
       const idx = getNextIndex(prev);
-      if (idx === prev.queueIndex && prev.repeat !== "one") return prev;
-      stopTimer();
-      startTimer();
-      return {
-        ...prev,
-        queueIndex: idx,
-        currentSong: prev.queue[idx],
-        currentTime: 0,
-        isPlaying: true,
-      };
+      if (idx < 0) return { ...prev, isPlaying: false, currentTime: 0 };
+      return prev; // playByIndex will handle
     });
-  }, [getNextIndex, startTimer, stopTimer]);
+    // We need to read the state to get the index
+    setState((prev) => {
+      const idx = getNextIndex(prev);
+      if (idx < 0 || idx === prev.queueIndex) return prev;
+      const song = prev.queue[idx];
+      if (!song) return prev;
+      const audio = audioRef.current;
+      if (audio && song.audioSrc) {
+        audio.src = song.audioSrc;
+        audio.play().catch(console.error);
+      }
+      return { ...prev, currentSong: song, queueIndex: idx, currentTime: 0, isPlaying: true };
+    });
+  }, [getNextIndex]);
 
   const prevSong = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
     setState((prev) => {
       if (prev.currentTime > 3) {
+        audio.currentTime = 0;
         return { ...prev, currentTime: 0 };
       }
       const idx = prev.queueIndex - 1;
-      if (idx < 0) return { ...prev, currentTime: 0 };
-      stopTimer();
-      startTimer();
-      return {
-        ...prev,
-        queueIndex: idx,
-        currentSong: prev.queue[idx],
-        currentTime: 0,
-        isPlaying: true,
-      };
+      if (idx < 0) {
+        audio.currentTime = 0;
+        return { ...prev, currentTime: 0 };
+      }
+      const song = prev.queue[idx];
+      if (song?.audioSrc) {
+        audio.src = song.audioSrc;
+        audio.play().catch(console.error);
+      }
+      return { ...prev, currentSong: song, queueIndex: idx, currentTime: 0, isPlaying: true };
     });
-  }, [startTimer, stopTimer]);
+  }, []);
 
   const seekTo = useCallback((time: number) => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.currentTime = time;
+    }
     setState((prev) => ({ ...prev, currentTime: time }));
   }, []);
 
@@ -139,10 +232,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const setRepeatMode = useCallback((mode: RepeatMode) => {
     setState((prev) => ({ ...prev, repeat: mode }));
-  }, []);
-
-  const setCurrentTime = useCallback((time: number) => {
-    setState((prev) => ({ ...prev, currentTime: time }));
   }, []);
 
   return (
@@ -156,7 +245,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         seekTo,
         toggleShuffle,
         setRepeatMode,
-        setCurrentTime,
       }}
     >
       {children}

@@ -1,8 +1,8 @@
-import { Smartphone, Info, Moon, Volume2, RefreshCw, Loader2, FolderSearch } from "lucide-react";
+import { Info, Moon, Volume2, FolderSearch, Loader2, FilePlus, FolderOpen, Trash2 } from "lucide-react";
 import { useLibrary } from "@/context/LibraryContext";
 
 const SettingsPage = () => {
-  const { songs, isScanning, rescan, isNative } = useLibrary();
+  const { songs, isScanning, addFilesFromPC, addFolderFromPC, clearLibrary, isNative, rescan } = useLibrary();
 
   const totalSize = songs.reduce((acc, s) => acc + s.fileSize, 0);
   const formatSize = (bytes: number) => {
@@ -16,37 +16,60 @@ const SettingsPage = () => {
   const formats = [...new Set(songs.map((s) => s.format))];
 
   return (
-    <div className="flex flex-col h-full px-4 pt-6">
+    <div className="flex flex-col h-full px-4 pt-6 overflow-y-auto scrollbar-hide">
       <h1 className="text-2xl font-bold text-foreground mb-6">Settings</h1>
 
       <div className="space-y-2">
-        {/* Storage scan */}
+        {/* Add files */}
         <button
-          onClick={rescan}
+          onClick={addFilesFromPC}
           disabled={isScanning}
           className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-50"
         >
-          {isScanning ? (
-            <Loader2 size={20} className="text-primary animate-spin" />
-          ) : (
-            <FolderSearch size={20} className="text-primary" />
-          )}
+          <FilePlus size={20} className="text-primary" />
           <div className="flex-1 text-left">
-            <p className="text-sm font-medium text-foreground">
-              {isScanning ? "Scanning..." : "Scan for Music"}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isNative
-                ? "Rescan internal storage for audio files"
-                : "Using demo data (web preview)"}
-            </p>
+            <p className="text-sm font-medium text-foreground">Add Audio Files</p>
+            <p className="text-xs text-muted-foreground">Select individual files from your PC</p>
           </div>
-          {!isScanning && <RefreshCw size={16} className="text-muted-foreground" />}
         </button>
+
+        {/* Add folder */}
+        <button
+          onClick={addFolderFromPC}
+          disabled={isScanning}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-50"
+        >
+          <FolderOpen size={20} className="text-primary" />
+          <div className="flex-1 text-left">
+            <p className="text-sm font-medium text-foreground">Add Music Folder</p>
+            <p className="text-xs text-muted-foreground">Scan an entire folder for audio files</p>
+          </div>
+        </button>
+
+        {/* Native scan */}
+        {isNative && (
+          <button
+            onClick={rescan}
+            disabled={isScanning}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-50"
+          >
+            {isScanning ? (
+              <Loader2 size={20} className="text-primary animate-spin" />
+            ) : (
+              <FolderSearch size={20} className="text-primary" />
+            )}
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-foreground">
+                {isScanning ? "Scanning..." : "Scan Device Storage"}
+              </p>
+              <p className="text-xs text-muted-foreground">Rescan internal storage for audio files</p>
+            </div>
+          </button>
+        )}
 
         {/* Library stats */}
         <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
-          <Smartphone size={20} className="text-primary" />
+          <Volume2 size={20} className="text-primary" />
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">Library Stats</p>
             <p className="text-xs text-muted-foreground">
@@ -56,13 +79,19 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
-          <Volume2 size={20} className="text-primary" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Audio Quality</p>
-            <p className="text-xs text-muted-foreground">High quality playback</p>
-          </div>
-        </div>
+        {/* Clear library */}
+        {songs.length > 0 && (
+          <button
+            onClick={clearLibrary}
+            className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform"
+          >
+            <Trash2 size={20} className="text-destructive" />
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-foreground">Clear Library</p>
+              <p className="text-xs text-muted-foreground">Remove all loaded songs</p>
+            </div>
+          </button>
+        )}
 
         <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
           <Moon size={20} className="text-primary" />
@@ -81,10 +110,10 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      <div className="mt-auto pb-6">
+      <div className="mt-auto py-6">
         <p className="text-xs text-muted-foreground text-center">
           SoundWave Music Player<br />
-          Built with ❤️ using Capacitor
+          Built with ❤️
         </p>
       </div>
     </div>
