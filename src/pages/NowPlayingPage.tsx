@@ -44,7 +44,8 @@ const NowPlayingPage = () => {
     );
   }
 
-  const progress = currentSong.duration > 0 ? (currentTime / currentSong.duration) * 100 : 0;
+  const totalDuration = duration || currentSong.duration;
+  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
   return (
     <div className="flex flex-col h-full px-6 pt-4">
