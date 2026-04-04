@@ -81,12 +81,12 @@ const NowPlayingPage = () => {
           value={[progress]}
           max={100}
           step={0.1}
-          onValueChange={([val]) => seekTo((val / 100) * currentSong.duration)}
+          onValueChange={([val]) => seekTo((val / 100) * totalDuration)}
           className="mb-2"
         />
         <div className="flex justify-between">
           <span className="text-xs text-muted-foreground">{formatTime(currentTime)}</span>
-          <span className="text-xs text-muted-foreground">{formatTime(currentSong.duration)}</span>
+          <span className="text-xs text-muted-foreground">{formatTime(totalDuration)}</span>
         </div>
       </div>
 

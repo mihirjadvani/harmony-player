@@ -7,11 +7,12 @@ interface MiniPlayerProps {
 }
 
 const MiniPlayer = ({ onExpand }: MiniPlayerProps) => {
-  const { currentSong, isPlaying, togglePlay, currentTime } = usePlayer();
+  const { currentSong, isPlaying, togglePlay, currentTime, duration } = usePlayer();
 
   if (!currentSong) return null;
 
-  const progress = currentSong.duration > 0 ? (currentTime / currentSong.duration) * 100 : 0;
+  const totalDuration = duration || currentSong.duration;
+  const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
   return (
     <div className="relative glass border-t border-border">
