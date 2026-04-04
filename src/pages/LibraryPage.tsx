@@ -1,11 +1,11 @@
-import { useState, useMemo } from "react";
-import { Search, RefreshCw, Loader2, Smartphone } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Search, FolderOpen, FilePlus, Loader2, Music } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SongItem from "@/components/SongItem";
 import { useLibrary } from "@/context/LibraryContext";
 
 const LibraryPage = () => {
-  const { songs, isScanning, scanProgress, rescan, isNative } = useLibrary();
+  const { songs, isScanning, scanProgress, addFilesFromPC, addFolderFromPC } = useLibrary();
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"title" | "artist" | "album">("title");
 
@@ -27,20 +27,29 @@ const LibraryPage = () => {
       <div className="px-4 pt-6 pb-3">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-foreground">Library</h1>
-          <button
-            onClick={rescan}
-            disabled={isScanning}
-            className="p-2 rounded-full bg-secondary text-secondary-foreground active:scale-90 transition-transform disabled:opacity-50"
-          >
-            {isScanning ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <RefreshCw size={18} />
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={addFilesFromPC}
+              disabled={isScanning}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-secondary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
+              title="Add audio files"
+            >
+              <FilePlus size={16} />
+              <span>Files</span>
+            </button>
+            <button
+              onClick={addFolderFromPC}
+              disabled={isScanning}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
+              title="Add entire folder"
+            >
+              <FolderOpen size={16} />
+              <span>Folder</span>
+            </button>
+          </div>
         </div>
 
-        {/* Scan progress */}
+        {/* Scan / extraction progress */}
         {isScanning && scanProgress && (
           <div className="mb-3 p-3 bg-card rounded-xl animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
@@ -48,7 +57,7 @@ const LibraryPage = () => {
               <span className="text-xs font-medium text-foreground">
                 {scanProgress.phase === "scanning"
                   ? "Scanning for audio files..."
-                  : `Extracting metadata (${scanProgress.current}/${scanProgress.total})`}
+                  : `Reading metadata (${scanProgress.current}/${scanProgress.total})`}
               </span>
             </div>
             {scanProgress.currentFile && (
@@ -64,16 +73,6 @@ const LibraryPage = () => {
                 />
               </div>
             )}
-          </div>
-        )}
-
-        {/* Not native banner */}
-        {!isNative && !isScanning && (
-          <div className="mb-3 p-3 bg-card rounded-xl flex items-center gap-3">
-            <Smartphone size={16} className="text-primary flex-shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Running in browser — showing demo songs. Build with Capacitor to scan real device files.
-            </p>
           </div>
         )}
 
@@ -112,9 +111,28 @@ const LibraryPage = () => {
           <SongItem key={song.id} song={song} queue={filtered} index={i} showIndex />
         ))}
         {filtered.length === 0 && !isScanning && (
-          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-            <Search size={48} className="mb-4 opacity-30" />
-            <p className="text-sm">No songs found</p>
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Music size={56} className="mb-4 opacity-20" />
+            <p className="text-base font-medium text-foreground mb-1">No songs yet</p>
+            <p className="text-sm text-muted-foreground mb-5 text-center px-8">
+              Add audio files from your PC to start listening
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={addFilesFromPC}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium active:scale-95 transition-transform"
+              >
+                <FilePlus size={18} />
+                Add Files
+              </button>
+              <button
+                onClick={addFolderFromPC}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform"
+              >
+                <FolderOpen size={18} />
+                Add Folder
+              </button>
+            </div>
           </div>
         )}
       </div>

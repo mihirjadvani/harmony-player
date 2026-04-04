@@ -1,13 +1,17 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Song } from "@/types/music";
 import { scanDeviceForMusic, isNativePlatform, ScanProgress } from "@/services/musicScanner";
-import { mockSongs } from "@/data/mockSongs";
+import { parseAudioFiles, openAudioFilePicker, openFolderPicker } from "@/services/webFilePicker";
 
 interface LibraryContextType {
   songs: Song[];
   isScanning: boolean;
   scanProgress: ScanProgress | null;
   rescan: () => Promise<void>;
+  addFilesFromPC: () => Promise<void>;
+  addFolderFromPC: () => Promise<void>;
+  removeSong: (id: string) => void;
+  clearLibrary: () => void;
   isNative: boolean;
 }
 
@@ -25,12 +29,9 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [scanProgress, setScanProgress] = useState<ScanProgress | null>(null);
   const isNative = isNativePlatform();
 
+  // Native device scan
   const scan = useCallback(async () => {
-    if (!isNative) {
-      // On web, use mock data
-      setSongs(mockSongs);
-      return;
-    }
+    if (!isNative) return;
 
     setIsScanning(true);
     setScanProgress({ phase: "scanning", current: 0, total: 0 });
@@ -42,16 +43,91 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setSongs(scanned);
     } catch (err) {
       console.error("Scan failed:", err);
-      // Fall back to mock data on error
-      setSongs(mockSongs);
     } finally {
       setIsScanning(false);
+      setScanProgress(null);
     }
   }, [isNative]);
 
+  // Web: pick individual files
+  const addFilesFromPC = useCallback(async () => {
+    const files = await openAudioFilePicker();
+    if (!files || files.length === 0) return;
+
+    setIsScanning(true);
+    setScanProgress({ phase: "extracting", current: 0, total: files.length });
+
+    try {
+      const newSongs = await parseAudioFiles(files, (current, total, fileName) => {
+        setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
+      });
+      setSongs((prev) => [...prev, ...newSongs]);
+    } catch (err) {
+      console.error("File parsing failed:", err);
+    } finally {
+      setIsScanning(false);
+      setScanProgress(null);
+    }
+  }, []);
+
+  // Web: pick entire folder
+  const addFolderFromPC = useCallback(async () => {
+    const files = await openFolderPicker();
+    if (!files || files.length === 0) return;
+
+    // Filter audio files from the folder
+    const audioExts = [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma", ".opus", ".webm"];
+    const audioFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      if (audioExts.some((ext) => f.name.toLowerCase().endsWith(ext))) {
+        audioFiles.push(f);
+      }
+    }
+
+    if (audioFiles.length === 0) return;
+
+    // Create a synthetic FileList-like structure
+    const dt = new DataTransfer();
+    audioFiles.forEach((f) => dt.items.add(f));
+
+    setIsScanning(true);
+    setScanProgress({ phase: "scanning", current: 0, total: audioFiles.length });
+
+    try {
+      const newSongs = await parseAudioFiles(dt.files, (current, total, fileName) => {
+        setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
+      });
+      setSongs((prev) => [...prev, ...newSongs]);
+    } catch (err) {
+      console.error("Folder parsing failed:", err);
+    } finally {
+      setIsScanning(false);
+      setScanProgress(null);
+    }
+  }, []);
+
+  const removeSong = useCallback((id: string) => {
+    setSongs((prev) => {
+      const song = prev.find((s) => s.id === id);
+      if (song?.audioSrc) URL.revokeObjectURL(song.audioSrc);
+      return prev.filter((s) => s.id !== id);
+    });
+  }, []);
+
+  const clearLibrary = useCallback(() => {
+    setSongs((prev) => {
+      prev.forEach((s) => {
+        if (s.audioSrc) URL.revokeObjectURL(s.audioSrc);
+      });
+      return [];
+    });
+  }, []);
+
+  // On native, auto-scan
   useEffect(() => {
-    scan();
-  }, [scan]);
+    if (isNative) scan();
+  }, [isNative, scan]);
 
   return (
     <LibraryContext.Provider
@@ -60,6 +136,10 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isScanning,
         scanProgress,
         rescan: scan,
+        addFilesFromPC,
+        addFolderFromPC,
+        removeSong,
+        clearLibrary,
         isNative,
       }}
     >
