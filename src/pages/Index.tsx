@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PlayerProvider } from "@/context/PlayerContext";
+import { LibraryProvider } from "@/context/LibraryContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
 import NowPlayingFull from "@/components/NowPlayingFull";
@@ -15,26 +16,21 @@ const Index = () => {
   const [showFullPlayer, setShowFullPlayer] = useState(false);
 
   return (
-    <PlayerProvider>
-      <div className="flex flex-col h-screen bg-background">
-        {/* Main content */}
-        <main className="flex-1 overflow-hidden">
-          {tab === "library" && <LibraryPage />}
-          {tab === "playlists" && <PlaylistsPage />}
-          {tab === "nowplaying" && <NowPlayingPage />}
-          {tab === "settings" && <SettingsPage />}
-        </main>
-
-        {/* Mini Player */}
-        {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
-
-        {/* Bottom Nav */}
-        <BottomNav active={tab} onChange={setTab} />
-
-        {/* Full-screen Now Playing overlay */}
-        {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
-      </div>
-    </PlayerProvider>
+    <LibraryProvider>
+      <PlayerProvider>
+        <div className="flex flex-col h-screen bg-background">
+          <main className="flex-1 overflow-hidden">
+            {tab === "library" && <LibraryPage />}
+            {tab === "playlists" && <PlaylistsPage />}
+            {tab === "nowplaying" && <NowPlayingPage />}
+            {tab === "settings" && <SettingsPage />}
+          </main>
+          {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
+          <BottomNav active={tab} onChange={setTab} />
+          {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
+        </div>
+      </PlayerProvider>
+    </LibraryProvider>
   );
 };
 
