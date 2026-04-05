@@ -1,6 +1,6 @@
-import { Library, ListMusic, Disc3, Settings } from "lucide-react";
+import { Library, ListMusic, Disc3, Settings, SlidersHorizontal } from "lucide-react";
 
-type Tab = "library" | "playlists" | "nowplaying" | "settings";
+type Tab = "library" | "playlists" | "nowplaying" | "equalizer" | "settings";
 
 interface BottomNavProps {
   active: Tab;
@@ -11,6 +11,7 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: "library", label: "Library", icon: Library },
   { id: "playlists", label: "Playlists", icon: ListMusic },
   { id: "nowplaying", label: "Playing", icon: Disc3 },
+  { id: "equalizer", label: "EQ", icon: SlidersHorizontal },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -24,12 +25,12 @@ const BottomNav = ({ active, onChange }: BottomNavProps) => {
             <button
               key={id}
               onClick={() => onChange(id)}
-              className={`flex flex-col items-center gap-1 px-4 py-1 rounded-xl transition-all duration-200 ${
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 ${
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <Icon size={22} className={isActive ? "text-primary" : ""} />
-              <span className="text-[10px] font-medium">{label}</span>
+              <Icon size={20} className={isActive ? "text-primary" : ""} />
+              <span className="text-[9px] font-medium">{label}</span>
             </button>
           );
         })}

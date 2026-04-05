@@ -1,5 +1,6 @@
 import { Music } from "lucide-react";
 import { usePlayer } from "@/context/PlayerContext";
+import { useRef, useEffect, useState } from "react";
 
 interface DiscPlayerProps {
   size?: "md" | "lg";
@@ -8,24 +9,72 @@ interface DiscPlayerProps {
 
 const DiscPlayer = ({ size = "lg", className = "" }: DiscPlayerProps) => {
   const { currentSong, isPlaying } = usePlayer();
+  const discRef = useRef<HTMLDivElement>(null);
+  const rotationRef = useRef(0);
+  const animFrameRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
+  const speedRef = useRef(0); // current speed (0 to 1)
 
   const dimensions = size === "lg" ? "w-64 h-64" : "w-48 h-48";
-  const holeDimensions = size === "lg" ? "w-16 h-16" : "w-12 h-12";
+  const holeDimensions = size === "lg" ? "w-14 h-14" : "w-10 h-10";
   const iconSize = size === "lg" ? 64 : 48;
+
+  useEffect(() => {
+    const animate = (time: number) => {
+      if (!lastTimeRef.current) lastTimeRef.current = time;
+      const delta = (time - lastTimeRef.current) / 1000;
+      lastTimeRef.current = time;
+
+      // Smooth speed transitions
+      const targetSpeed = isPlaying ? 1 : 0;
+      const ease = isPlaying ? 3 : 2; // ease-in faster, ease-out slower
+      speedRef.current += (targetSpeed - speedRef.current) * Math.min(delta * ease, 1);
+
+      // Rotate at 45 deg/sec at full speed
+      rotationRef.current += speedRef.current * 45 * delta;
+
+      if (discRef.current) {
+        discRef.current.style.transform = `rotate(${rotationRef.current}deg)`;
+      }
+
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animFrameRef.current);
+  }, [isPlaying]);
 
   return (
     <div className={`relative ${dimensions} ${className}`}>
       {/* Glow effect */}
-      <div className="absolute inset-0 rounded-full blur-3xl opacity-20 bg-primary" />
+      <div
+        className="absolute inset-[-20%] rounded-full blur-3xl transition-opacity duration-1000"
+        style={{
+          background: "radial-gradient(circle, hsl(var(--primary) / 0.25), transparent 70%)",
+          opacity: isPlaying ? 1 : 0.3,
+        }}
+      />
+
+      {/* Shadow under disc */}
+      <div
+        className="absolute inset-2 rounded-full transition-all duration-700"
+        style={{
+          boxShadow: isPlaying
+            ? "0 20px 60px hsl(0 0% 0% / 0.6), 0 0 40px hsl(var(--primary) / 0.15)"
+            : "0 10px 30px hsl(0 0% 0% / 0.4)",
+        }}
+      />
 
       {/* Disc */}
       <div
-        className={`relative ${dimensions} rounded-full shadow-2xl overflow-hidden border-2 border-border/30 ${
-          isPlaying ? "animate-disc-spin" : ""
-        }`}
-        style={{ animationPlayState: isPlaying ? "running" : "paused" }}
+        ref={discRef}
+        className={`relative ${dimensions} rounded-full overflow-hidden`}
+        style={{
+          boxShadow: "inset 0 0 30px hsl(0 0% 0% / 0.3), 0 0 1px hsl(0 0% 100% / 0.1)",
+          perspective: "800px",
+        }}
       >
-        {/* Album art or fallback gradient */}
+        {/* Album art or fallback */}
         {currentSong?.albumArt ? (
           <img
             src={currentSong.albumArt}
@@ -39,17 +88,47 @@ const DiscPlayer = ({ size = "lg", className = "" }: DiscPlayerProps) => {
         )}
 
         {/* Vinyl grooves overlay */}
-        <div className="absolute inset-0 rounded-full"
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
           style={{
             background: `
-              radial-gradient(circle, transparent 20%, transparent 21%, hsl(var(--border) / 0.1) 21.5%, transparent 22%, transparent 30%, hsl(var(--border) / 0.08) 30.5%, transparent 31%, transparent 40%, hsl(var(--border) / 0.06) 40.5%, transparent 41%, transparent 50%, hsl(var(--border) / 0.05) 50.5%, transparent 51%, transparent 60%, hsl(var(--border) / 0.04) 60.5%, transparent 61%, transparent 70%, hsl(var(--border) / 0.03) 70.5%, transparent 71%, transparent 80%, hsl(var(--border) / 0.02) 80.5%, transparent 81%)
-            `
+              repeating-radial-gradient(
+                circle at center,
+                transparent 0px,
+                transparent 3px,
+                hsl(0 0% 0% / 0.06) 3.5px,
+                transparent 4px
+              )
+            `,
+          }}
+        />
+
+        {/* Shine / reflection */}
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, hsl(0 0% 100% / 0.08) 0%, transparent 40%, transparent 60%, hsl(0 0% 100% / 0.04) 100%)",
+          }}
+        />
+
+        {/* Rim highlight */}
+        <div
+          className="absolute inset-0 rounded-full pointer-events-none"
+          style={{
+            boxShadow: "inset 0 0 0 2px hsl(0 0% 100% / 0.08), inset 0 0 0 3px hsl(0 0% 0% / 0.2)",
           }}
         />
 
         {/* Center hole */}
-        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${holeDimensions} rounded-full bg-background border-2 border-border/50 flex items-center justify-center shadow-inner`}>
-          <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${holeDimensions} rounded-full bg-background flex items-center justify-center`}
+          style={{
+            boxShadow: "inset 0 2px 8px hsl(0 0% 0% / 0.5), 0 0 0 2px hsl(0 0% 100% / 0.06)",
+          }}
+        >
+          {/* Pin */}
+          <div className="w-3 h-3 rounded-full bg-gradient-to-br from-muted-foreground/50 to-muted-foreground/20"
+            style={{ boxShadow: "0 1px 3px hsl(0 0% 0% / 0.5)" }}
+          />
         </div>
       </div>
     </div>

@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Song } from "@/types/music";
 import AlbumArt from "./AlbumArt";
 import { usePlayer } from "@/context/PlayerContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import { Heart, MoreVertical } from "lucide-react";
-import { useState } from "react";
+import SongOptionsMenu from "./SongOptionsMenu";
 
 interface SongItemProps {
   song: Song;
@@ -19,51 +21,65 @@ const formatDuration = (seconds: number) => {
 
 const SongItem = ({ song, queue, index, showIndex }: SongItemProps) => {
   const { playSong, currentSong, isPlaying } = usePlayer();
-  const [liked, setLiked] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const [menuOpen, setMenuOpen] = useState(false);
   const isActive = currentSong?.id === song.id;
+  const liked = isFavorite(song.id);
 
   return (
-    <div
-      onClick={() => playSong(song, queue)}
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 active:scale-[0.98] cursor-pointer ${
-        isActive ? "bg-primary/10" : "hover:bg-secondary/50"
-      }`}
-    >
-      {showIndex && (
-        <span className={`w-6 text-center text-sm font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
-          {isActive && isPlaying ? (
-            <span className="flex gap-[2px] items-end justify-center h-4">
-              <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "60%" }} />
-              <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "100%", animationDelay: "0.15s" }} />
-              <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "40%", animationDelay: "0.3s" }} />
-            </span>
-          ) : (
-            index !== undefined ? index + 1 : ""
-          )}
-        </span>
-      )}
-      <AlbumArt src={song.albumArt} alt={song.title} size="sm" />
-      <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>
-          {song.title}
-        </p>
-        <p className="text-xs text-muted-foreground truncate">
-          {song.artist} · {song.album}
-        </p>
+    <>
+      <div
+        onClick={() => playSong(song, queue)}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 active:scale-[0.98] cursor-pointer ${
+          isActive ? "bg-primary/10" : "hover:bg-secondary/50"
+        }`}
+      >
+        {showIndex && (
+          <span className={`w-6 text-center text-sm font-medium ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+            {isActive && isPlaying ? (
+              <span className="flex gap-[2px] items-end justify-center h-4">
+                <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "60%" }} />
+                <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "100%", animationDelay: "0.15s" }} />
+                <span className="w-[3px] bg-primary rounded-full animate-pulse" style={{ height: "40%", animationDelay: "0.3s" }} />
+              </span>
+            ) : (
+              index !== undefined ? index + 1 : ""
+            )}
+          </span>
+        )}
+        <AlbumArt src={song.albumArt} alt={song.title} size="sm" />
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-medium truncate ${isActive ? "text-primary" : "text-foreground"}`}>
+            {song.title}
+          </p>
+          <p className="text-xs text-muted-foreground truncate">
+            {song.artist} · {song.album}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground">{formatDuration(song.duration)}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFavorite(song.id);
+            }}
+            className="p-1"
+          >
+            <Heart size={16} className={liked ? "fill-primary text-primary" : "text-muted-foreground"} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(true);
+            }}
+            className="p-1"
+          >
+            <MoreVertical size={16} className="text-muted-foreground" />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-muted-foreground">{formatDuration(song.duration)}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setLiked(!liked);
-          }}
-          className="p-1"
-        >
-          <Heart size={16} className={liked ? "fill-primary text-primary" : "text-muted-foreground"} />
-        </button>
-      </div>
-    </div>
+      <SongOptionsMenu song={song} open={menuOpen} onClose={() => setMenuOpen(false)} />
+    </>
   );
 };
 
