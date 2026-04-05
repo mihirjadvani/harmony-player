@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { usePlayer } from "@/context/PlayerContext";
+import { useFavorites } from "@/context/FavoritesContext";
 import DiscPlayer from "@/components/DiscPlayer";
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import SongItem from "@/components/SongItem";
-import { Disc3 } from "lucide-react";
+import SongOptionsMenu from "@/components/SongOptionsMenu";
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, MoreHorizontal, Disc3 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60);
@@ -13,20 +15,11 @@ const formatTime = (seconds: number) => {
 
 const NowPlayingPage = () => {
   const {
-    currentSong,
-    isPlaying,
-    currentTime,
-    duration,
-    shuffle,
-    repeat,
-    queue,
-    togglePlay,
-    nextSong,
-    prevSong,
-    seekTo,
-    toggleShuffle,
-    setRepeatMode,
+    currentSong, isPlaying, currentTime, duration, shuffle, repeat, queue,
+    togglePlay, nextSong, prevSong, seekTo, toggleShuffle, setRepeatMode,
   } = usePlayer();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const cycleRepeat = () => {
     const modes: Array<"off" | "all" | "one"> = ["off", "all", "one"];
@@ -46,29 +39,41 @@ const NowPlayingPage = () => {
 
   const totalDuration = duration || currentSong.duration;
   const progress = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
+  const liked = isFavorite(currentSong.id);
 
   return (
     <div className="flex flex-col h-full px-6 pt-4">
-      <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-6">Now Playing</p>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs text-muted-foreground uppercase tracking-widest">Now Playing</p>
+        <button onClick={() => setMenuOpen(true)} className="p-1">
+          <MoreHorizontal size={20} className="text-muted-foreground" />
+        </button>
+      </div>
 
-      {/* Disc Player */}
-      <div className="flex justify-center mb-8">
+      {/* Disc */}
+      <div className="flex justify-center mb-6">
         <DiscPlayer size="lg" />
       </div>
 
-      {/* Info */}
-      <div className="mb-4 text-center">
-        <h2 className="text-xl font-bold text-foreground truncate">{currentSong.title}</h2>
-        <p className="text-sm text-muted-foreground">{currentSong.artist} — {currentSong.album}</p>
-        {currentSong.genre && (
-          <span className="inline-block mt-2 px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">
-            {currentSong.genre}
-          </span>
-        )}
+      {/* Info + Favorite */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="min-w-0 flex-1 text-center">
+          <h2 className="text-xl font-bold text-foreground truncate">{currentSong.title}</h2>
+          <p className="text-sm text-muted-foreground">{currentSong.artist} — {currentSong.album}</p>
+          {currentSong.genre && (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">
+              {currentSong.genre}
+            </span>
+          )}
+        </div>
+        <button onClick={() => toggleFavorite(currentSong.id)} className="p-2 shrink-0">
+          <Heart size={22} className={liked ? "fill-primary text-primary" : "text-muted-foreground"} />
+        </button>
       </div>
 
       {/* Progress */}
-      <div className="mb-4">
+      <div className="mb-3">
         <Slider
           value={[progress]}
           max={100}
@@ -83,7 +88,7 @@ const NowPlayingPage = () => {
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-between px-2 mb-6">
+      <div className="flex items-center justify-between px-2 mb-4">
         <button onClick={toggleShuffle} className={`p-2 ${shuffle ? "text-primary" : "text-muted-foreground"}`}>
           <Shuffle size={18} />
         </button>
@@ -121,6 +126,8 @@ const NowPlayingPage = () => {
             ))}
         </div>
       )}
+
+      <SongOptionsMenu song={currentSong} open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   );
 };
