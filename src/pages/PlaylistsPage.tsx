@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Plus, Music, Trash2 } from "lucide-react";
 import { Playlist } from "@/types/music";
-import { mockSongs } from "@/data/mockSongs";
 import AlbumArt from "@/components/AlbumArt";
 import SongItem from "@/components/SongItem";
 import {
@@ -15,26 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const PlaylistsPage = () => {
-  const [playlists, setPlaylists] = useState<Playlist[]>([
-    {
-      id: "fav",
-      name: "Favorites",
-      songs: mockSongs.slice(0, 4),
-      createdAt: new Date(),
-    },
-    {
-      id: "chill",
-      name: "Chill Vibes",
-      songs: mockSongs.slice(3, 7),
-      createdAt: new Date(),
-    },
-    {
-      id: "recent",
-      name: "Recently Played",
-      songs: mockSongs.slice(5, 10),
-      createdAt: new Date(),
-    },
-  ]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [newName, setNewName] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -109,6 +89,13 @@ const PlaylistsPage = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4 pb-4">
+        {playlists.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            <Music size={56} className="mb-4 opacity-20" />
+            <p className="text-base font-medium text-foreground mb-1">No playlists yet</p>
+            <p className="text-sm text-center px-8">Create a playlist to organize your music</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           {playlists.map((pl) => (
             <div

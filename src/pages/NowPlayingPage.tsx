@@ -1,5 +1,5 @@
 import { usePlayer } from "@/context/PlayerContext";
-import AlbumArt from "@/components/AlbumArt";
+import DiscPlayer from "@/components/DiscPlayer";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import SongItem from "@/components/SongItem";
@@ -51,17 +51,9 @@ const NowPlayingPage = () => {
     <div className="flex flex-col h-full px-6 pt-4">
       <p className="text-xs text-muted-foreground uppercase tracking-widest text-center mb-6">Now Playing</p>
 
-      {/* Album Art */}
+      {/* Disc Player */}
       <div className="flex justify-center mb-8">
-        <div className="relative">
-          <div className="absolute inset-0 rounded-3xl blur-3xl opacity-20 bg-primary" />
-          <AlbumArt
-            src={currentSong.albumArt}
-            alt={currentSong.title}
-            size="lg"
-            className="rounded-3xl shadow-2xl relative z-10"
-          />
-        </div>
+        <DiscPlayer size="lg" />
       </div>
 
       {/* Info */}

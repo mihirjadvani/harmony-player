@@ -1,25 +1,79 @@
-import { useState, useMemo, useRef } from "react";
-import { Search, FolderOpen, FilePlus, Loader2, Music } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Search, FolderOpen, FilePlus, Loader2, Music, ChevronRight, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SongItem from "@/components/SongItem";
 import { useLibrary } from "@/context/LibraryContext";
+import AlbumArt from "@/components/AlbumArt";
+
+type ViewMode = "title" | "artist" | "album";
 
 const LibraryPage = () => {
   const { songs, isScanning, scanProgress, addFilesFromPC, addFolderFromPC } = useLibrary();
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"title" | "artist" | "album">("title");
+  const [viewMode, setViewMode] = useState<ViewMode>("title");
+  const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return songs
-      .filter(
-        (s) =>
-          s.title.toLowerCase().includes(q) ||
-          s.artist.toLowerCase().includes(q) ||
-          s.album.toLowerCase().includes(q)
-      )
-      .sort((a, b) => a[sortBy].localeCompare(b[sortBy]));
-  }, [songs, search, sortBy]);
+    return songs.filter(
+      (s) =>
+        s.title.toLowerCase().includes(q) ||
+        s.artist.toLowerCase().includes(q) ||
+        s.album.toLowerCase().includes(q)
+    );
+  }, [songs, search]);
+
+  // Group songs by artist or album
+  const groups = useMemo(() => {
+    if (viewMode === "title") return null;
+    const map = new Map<string, typeof filtered>();
+    filtered.forEach((song) => {
+      const key = viewMode === "artist" ? song.artist : song.album;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(song);
+    });
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [filtered, viewMode]);
+
+  const sortedSongs = useMemo(() => {
+    return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
+  }, [filtered]);
+
+  // Songs within a selected group
+  const groupSongs = useMemo(() => {
+    if (!selectedGroup || !groups) return [];
+    const entry = groups.find(([name]) => name === selectedGroup);
+    return entry ? entry[1] : [];
+  }, [selectedGroup, groups]);
+
+  // Detail view for artist/album
+  if (selectedGroup && (viewMode === "artist" || viewMode === "album")) {
+    const firstSong = groupSongs[0];
+    return (
+      <div className="flex flex-col h-full">
+        <div className="px-4 pt-6 pb-3">
+          <button
+            onClick={() => setSelectedGroup(null)}
+            className="flex items-center gap-1 text-sm text-primary mb-3"
+          >
+            <ArrowLeft size={16} /> Back
+          </button>
+          <div className="flex items-center gap-3 mb-3">
+            <AlbumArt src={firstSong?.albumArt} alt={selectedGroup} size="md" />
+            <div>
+              <h1 className="text-xl font-bold text-foreground">{selectedGroup}</h1>
+              <p className="text-xs text-muted-foreground">{groupSongs.length} songs</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-4">
+          {groupSongs.map((song, i) => (
+            <SongItem key={song.id} song={song} queue={groupSongs} index={i} showIndex />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -49,7 +103,7 @@ const LibraryPage = () => {
           </div>
         </div>
 
-        {/* Scan / extraction progress */}
+        {/* Scan progress */}
         {isScanning && scanProgress && (
           <div className="mb-3 p-3 bg-card rounded-xl animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
@@ -67,9 +121,7 @@ const LibraryPage = () => {
               <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full transition-all duration-300"
-                  style={{
-                    width: `${(scanProgress.current / scanProgress.total) * 100}%`,
-                  }}
+                  style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%` }}
                 />
               </div>
             )}
@@ -85,13 +137,18 @@ const LibraryPage = () => {
             className="pl-10 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl"
           />
         </div>
+
+        {/* View mode tabs */}
         <div className="flex gap-2 mt-3">
           {(["title", "artist", "album"] as const).map((key) => (
             <button
               key={key}
-              onClick={() => setSortBy(key)}
+              onClick={() => {
+                setViewMode(key);
+                setSelectedGroup(null);
+              }}
               className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                sortBy === key ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+                viewMode === key ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
               }`}
             >
               {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -102,14 +159,44 @@ const LibraryPage = () => {
 
       {/* Song count */}
       <div className="px-4 py-2">
-        <p className="text-xs text-muted-foreground">{filtered.length} songs</p>
+        <p className="text-xs text-muted-foreground">
+          {viewMode === "title"
+            ? `${filtered.length} songs`
+            : `${groups?.length || 0} ${viewMode === "artist" ? "artists" : "albums"}`}
+        </p>
       </div>
 
-      {/* Song List */}
+      {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-4">
-        {filtered.map((song, i) => (
-          <SongItem key={song.id} song={song} queue={filtered} index={i} showIndex />
-        ))}
+        {viewMode === "title" ? (
+          <>
+            {sortedSongs.map((song, i) => (
+              <SongItem key={song.id} song={song} queue={sortedSongs} index={i} showIndex />
+            ))}
+          </>
+        ) : (
+          <>
+            {groups?.map(([name, groupSongs]) => (
+              <button
+                key={name}
+                onClick={() => setSelectedGroup(name)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 active:scale-[0.98] transition-all"
+              >
+                <AlbumArt
+                  src={groupSongs[0]?.albumArt}
+                  alt={name}
+                  size="sm"
+                />
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                  <p className="text-xs text-muted-foreground">{groupSongs.length} songs</p>
+                </div>
+                <ChevronRight size={16} className="text-muted-foreground" />
+              </button>
+            ))}
+          </>
+        )}
+
         {filtered.length === 0 && !isScanning && (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Music size={56} className="mb-4 opacity-20" />

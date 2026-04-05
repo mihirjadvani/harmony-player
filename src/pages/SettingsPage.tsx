@@ -1,8 +1,14 @@
-import { Info, Moon, Volume2, FolderSearch, Loader2, FilePlus, FolderOpen, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Info, Moon, Volume2, FolderSearch, Loader2, FilePlus, FolderOpen, Trash2, TimerOff } from "lucide-react";
 import { useLibrary } from "@/context/LibraryContext";
+import { useSleepTimer } from "@/context/SleepTimerContext";
+
+const TIMER_OPTIONS = [5, 10, 15, 30, 60];
 
 const SettingsPage = () => {
   const { songs, isScanning, addFilesFromPC, addFolderFromPC, clearLibrary, isNative, rescan } = useLibrary();
+  const { activeMinutes, remainingSeconds, startTimer, cancelTimer } = useSleepTimer();
+  const [showTimerPicker, setShowTimerPicker] = useState(false);
 
   const totalSize = songs.reduce((acc, s) => acc + s.fileSize, 0);
   const formatSize = (bytes: number) => {
@@ -11,6 +17,12 @@ const SettingsPage = () => {
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`;
+  };
+
+  const formatRemaining = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
   const formats = [...new Set(songs.map((s) => s.format))];
@@ -93,13 +105,56 @@ const SettingsPage = () => {
           </button>
         )}
 
-        <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
+        {/* Sleep Timer */}
+        <button
+          onClick={() => setShowTimerPicker(!showTimerPicker)}
+          className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform"
+        >
           <Moon size={20} className="text-primary" />
-          <div className="flex-1">
+          <div className="flex-1 text-left">
             <p className="text-sm font-medium text-foreground">Sleep Timer</p>
-            <p className="text-xs text-muted-foreground">Off</p>
+            <p className="text-xs text-muted-foreground">
+              {activeMinutes ? `${formatRemaining(remainingSeconds)} remaining` : "Off"}
+            </p>
           </div>
-        </div>
+        </button>
+
+        {/* Timer options */}
+        {showTimerPicker && (
+          <div className="bg-card rounded-2xl p-4 animate-fade-in space-y-2">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Select Duration</p>
+            <div className="grid grid-cols-3 gap-2">
+              {TIMER_OPTIONS.map((min) => (
+                <button
+                  key={min}
+                  onClick={() => {
+                    startTimer(min);
+                    setShowTimerPicker(false);
+                  }}
+                  className={`py-3 rounded-xl text-sm font-medium transition-colors ${
+                    activeMinutes === min
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-secondary-foreground active:scale-95"
+                  }`}
+                >
+                  {min} min
+                </button>
+              ))}
+              {activeMinutes && (
+                <button
+                  onClick={() => {
+                    cancelTimer();
+                    setShowTimerPicker(false);
+                  }}
+                  className="py-3 rounded-xl text-sm font-medium bg-destructive/10 text-destructive active:scale-95 transition-transform flex items-center justify-center gap-1"
+                >
+                  <TimerOff size={14} />
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
           <Info size={20} className="text-primary" />

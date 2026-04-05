@@ -1,5 +1,5 @@
 import { usePlayer } from "@/context/PlayerContext";
-import AlbumArt from "./AlbumArt";
+import DiscPlayer from "./DiscPlayer";
 import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, ChevronDown } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
@@ -42,7 +42,6 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background animate-slide-up">
-      {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
 
       <div className="relative flex flex-col h-full px-6 pt-4 pb-8 safe-bottom">
@@ -57,17 +56,9 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
           <div className="w-10" />
         </div>
 
-        {/* Album Art */}
+        {/* Disc Player */}
         <div className="flex-1 flex items-center justify-center mb-8">
-          <div className="relative">
-            <div className="absolute inset-0 rounded-3xl blur-3xl opacity-30 bg-primary" />
-            <AlbumArt
-              src={currentSong.albumArt}
-              alt={currentSong.title}
-              size="xl"
-              className="rounded-3xl shadow-2xl relative z-10"
-            />
-          </div>
+          <DiscPlayer size="lg" />
         </div>
 
         {/* Song Info */}
