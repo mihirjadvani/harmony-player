@@ -11,6 +11,9 @@ export const EQ_PRESETS: EQPreset[] = [
   { name: "Rock", gains: [4, 2, -1, 3, 4] },
   { name: "Pop", gains: [-1, 2, 4, 2, -1] },
   { name: "Jazz", gains: [3, 1, -1, 1, 3] },
+  { name: "Classical", gains: [0, 0, 0, 3, 5] },
+  { name: "Dance", gains: [5, 3, 1, 0, -1] },
+  { name: "Flat", gains: [0, 0, 0, 0, 0] },
 ];
 
 const EQ_FREQUENCIES = [60, 230, 910, 3600, 14000];
@@ -44,7 +47,6 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const connectedAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load saved state
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -57,18 +59,14 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {}
   }, []);
 
-  // Save state
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ preset: activePreset, gains, enabled: isEnabled }));
   }, [activePreset, gains, isEnabled]);
 
-  // Connect to audio element and apply EQ
   useEffect(() => {
     const connectToAudio = () => {
       const audioEl = document.querySelector("audio") as HTMLAudioElement | null;
-      // Also try to find the Audio() element via the global ref
       if (!audioEl && !connectedAudioRef.current) return;
-      
       const target = audioEl || connectedAudioRef.current;
       if (!target) return;
 
@@ -81,9 +79,7 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         try {
           sourceRef.current = ctx.createMediaElementSource(target);
           connectedAudioRef.current = target;
-        } catch {
-          // Already connected
-        }
+        } catch {}
       }
 
       if (filtersRef.current.length === 0) {
@@ -96,7 +92,6 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return filter;
         });
 
-        // Chain: source -> filters -> destination
         let prev: AudioNode = sourceRef.current!;
         filtersRef.current.forEach((f) => {
           prev.connect(f);
@@ -106,13 +101,11 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     };
 
-    // Try connecting periodically since Audio element is created dynamically
     const interval = setInterval(connectToAudio, 1000);
     connectToAudio();
     return () => clearInterval(interval);
   }, []);
 
-  // Update filter gains
   useEffect(() => {
     filtersRef.current.forEach((filter, i) => {
       filter.gain.value = isEnabled ? gains[i] : 0;
