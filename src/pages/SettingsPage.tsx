@@ -28,11 +28,10 @@ const SettingsPage = () => {
   const formats = [...new Set(songs.map((s) => s.format))];
 
   return (
-    <div className="flex flex-col h-full px-4 pt-6 overflow-y-auto scrollbar-hide">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Settings</h1>
+    <div className="flex flex-col h-full px-4 pt-4 overflow-y-auto scrollbar-hide">
+      <h1 className="text-2xl font-bold text-foreground mb-6 font-heading">Settings</h1>
 
       <div className="space-y-2">
-        {/* Add files */}
         <button
           onClick={addFilesFromPC}
           disabled={isScanning}
@@ -45,7 +44,6 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* Add folder */}
         <button
           onClick={addFolderFromPC}
           disabled={isScanning}
@@ -58,7 +56,6 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* Native scan */}
         {isNative && (
           <button
             onClick={rescan}
@@ -79,7 +76,6 @@ const SettingsPage = () => {
           </button>
         )}
 
-        {/* Library stats */}
         <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
           <Volume2 size={20} className="text-primary" />
           <div className="flex-1">
@@ -91,7 +87,6 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Clear library */}
         {songs.length > 0 && (
           <button
             onClick={clearLibrary}
@@ -105,7 +100,6 @@ const SettingsPage = () => {
           </button>
         )}
 
-        {/* Sleep Timer */}
         <button
           onClick={() => setShowTimerPicker(!showTimerPicker)}
           className="w-full flex items-center gap-4 p-4 bg-card rounded-2xl active:scale-[0.98] transition-transform"
@@ -119,7 +113,6 @@ const SettingsPage = () => {
           </div>
         </button>
 
-        {/* Timer options */}
         {showTimerPicker && (
           <div className="bg-card rounded-2xl p-4 animate-fade-in space-y-2">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Select Duration</p>
@@ -160,14 +153,14 @@ const SettingsPage = () => {
           <Info size={20} className="text-primary" />
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">About</p>
-            <p className="text-xs text-muted-foreground">SoundWave v1.0</p>
+            <p className="text-xs text-muted-foreground font-heading">Harmony Player v1.0</p>
           </div>
         </div>
       </div>
 
       <div className="mt-auto py-6">
         <p className="text-xs text-muted-foreground text-center">
-          SoundWave Music Player<br />
+          <span className="font-heading">Harmony Player</span><br />
           Built with ❤️
         </p>
       </div>

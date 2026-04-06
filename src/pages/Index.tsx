@@ -8,6 +8,7 @@ import { EqualizerProvider } from "@/context/EqualizerContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
 import NowPlayingFull from "@/components/NowPlayingFull";
+import VolumeControl from "@/components/VolumeControl";
 import LibraryPage from "@/pages/LibraryPage";
 import PlaylistsPage from "@/pages/PlaylistsPage";
 import NowPlayingPage from "@/pages/NowPlayingPage";
@@ -28,6 +29,11 @@ const InnerApp = () => {
   return (
     <SleepTimerProvider onTimerEnd={handleSleepTimerEnd}>
       <div className="flex flex-col h-screen bg-background">
+        {/* App Header */}
+        <header className="px-4 pt-4 pb-2 flex items-center justify-center">
+          <h1 className="text-xl font-heading text-gradient tracking-wide">Harmony Player</h1>
+        </header>
+
         <main className="flex-1 overflow-hidden">
           {tab === "library" && <LibraryPage />}
           {tab === "playlists" && <PlaylistsPage />}
@@ -38,6 +44,7 @@ const InnerApp = () => {
         {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
         <BottomNav active={tab} onChange={setTab} />
         {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
+        <VolumeControl />
       </div>
     </SleepTimerProvider>
   );

@@ -31,7 +31,7 @@ const NowPlayingPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground px-6">
         <Disc3 size={80} className="mb-6 opacity-20" />
-        <p className="text-lg font-medium mb-2 text-foreground">No song playing</p>
+        <p className="text-lg font-medium mb-2 text-foreground font-heading">No song playing</p>
         <p className="text-sm text-center">Go to Library and tap a song to start playing</p>
       </div>
     );
@@ -42,24 +42,21 @@ const NowPlayingPage = () => {
   const liked = isFavorite(currentSong.id);
 
   return (
-    <div className="flex flex-col h-full px-6 pt-4">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full px-6 pt-2">
+      <div className="flex items-center justify-between mb-3">
         <p className="text-xs text-muted-foreground uppercase tracking-widest">Now Playing</p>
         <button onClick={() => setMenuOpen(true)} className="p-1">
           <MoreHorizontal size={20} className="text-muted-foreground" />
         </button>
       </div>
 
-      {/* Disc */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-4">
         <DiscPlayer size="lg" />
       </div>
 
-      {/* Info + Favorite */}
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0 flex-1 text-center">
-          <h2 className="text-xl font-bold text-foreground truncate">{currentSong.title}</h2>
+          <h2 className="text-xl font-bold text-foreground truncate font-heading">{currentSong.title}</h2>
           <p className="text-sm text-muted-foreground">{currentSong.artist} — {currentSong.album}</p>
           {currentSong.genre && (
             <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-secondary text-xs text-muted-foreground">
@@ -72,7 +69,6 @@ const NowPlayingPage = () => {
         </button>
       </div>
 
-      {/* Progress */}
       <div className="mb-3">
         <Slider
           value={[progress]}
@@ -87,7 +83,6 @@ const NowPlayingPage = () => {
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex items-center justify-between px-2 mb-4">
         <button onClick={toggleShuffle} className={`p-2 ${shuffle ? "text-primary" : "text-muted-foreground"}`}>
           <Shuffle size={18} />
@@ -114,7 +109,6 @@ const NowPlayingPage = () => {
         </button>
       </div>
 
-      {/* Queue */}
       {queue.length > 1 && (
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>

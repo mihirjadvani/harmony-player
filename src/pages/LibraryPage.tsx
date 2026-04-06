@@ -23,7 +23,6 @@ const LibraryPage = () => {
     );
   }, [songs, search]);
 
-  // Group songs by artist or album
   const groups = useMemo(() => {
     if (viewMode === "title") return null;
     const map = new Map<string, typeof filtered>();
@@ -35,33 +34,26 @@ const LibraryPage = () => {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [filtered, viewMode]);
 
-  const sortedSongs = useMemo(() => {
-    return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
-  }, [filtered]);
+  const sortedSongs = useMemo(() => [...filtered].sort((a, b) => a.title.localeCompare(b.title)), [filtered]);
 
-  // Songs within a selected group
   const groupSongs = useMemo(() => {
     if (!selectedGroup || !groups) return [];
     const entry = groups.find(([name]) => name === selectedGroup);
     return entry ? entry[1] : [];
   }, [selectedGroup, groups]);
 
-  // Detail view for artist/album
   if (selectedGroup && (viewMode === "artist" || viewMode === "album")) {
     const firstSong = groupSongs[0];
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 pt-6 pb-3">
-          <button
-            onClick={() => setSelectedGroup(null)}
-            className="flex items-center gap-1 text-sm text-primary mb-3"
-          >
+        <div className="px-4 pt-4 pb-3">
+          <button onClick={() => setSelectedGroup(null)} className="flex items-center gap-1 text-sm text-primary mb-3">
             <ArrowLeft size={16} /> Back
           </button>
           <div className="flex items-center gap-3 mb-3">
             <AlbumArt src={firstSong?.albumArt} alt={selectedGroup} size="md" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">{selectedGroup}</h1>
+              <h1 className="text-xl font-bold text-foreground font-heading">{selectedGroup}</h1>
               <p className="text-xs text-muted-foreground">{groupSongs.length} songs</p>
             </div>
           </div>
@@ -77,16 +69,14 @@ const LibraryPage = () => {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="px-4 pt-6 pb-3">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">Library</h1>
+      <div className="px-4 pt-2 pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-2xl font-bold text-foreground font-heading">Library</h1>
           <div className="flex gap-2">
             <button
               onClick={addFilesFromPC}
               disabled={isScanning}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-secondary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
-              title="Add audio files"
             >
               <FilePlus size={16} />
               <span>Files</span>
@@ -95,7 +85,6 @@ const LibraryPage = () => {
               onClick={addFolderFromPC}
               disabled={isScanning}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
-              title="Add entire folder"
             >
               <FolderOpen size={16} />
               <span>Folder</span>
@@ -103,7 +92,6 @@ const LibraryPage = () => {
           </div>
         </div>
 
-        {/* Scan progress */}
         {isScanning && scanProgress && (
           <div className="mb-3 p-3 bg-card rounded-xl animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
@@ -138,7 +126,6 @@ const LibraryPage = () => {
           />
         </div>
 
-        {/* View mode tabs */}
         <div className="flex gap-2 mt-3">
           {(["title", "artist", "album"] as const).map((key) => (
             <button
@@ -157,8 +144,7 @@ const LibraryPage = () => {
         </div>
       </div>
 
-      {/* Song count */}
-      <div className="px-4 py-2">
+      <div className="px-4 py-1">
         <p className="text-xs text-muted-foreground">
           {viewMode === "title"
             ? `${filtered.length} songs`
@@ -166,35 +152,26 @@ const LibraryPage = () => {
         </p>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-4">
         {viewMode === "title" ? (
-          <>
-            {sortedSongs.map((song, i) => (
-              <SongItem key={song.id} song={song} queue={sortedSongs} index={i} showIndex />
-            ))}
-          </>
+          sortedSongs.map((song, i) => (
+            <SongItem key={song.id} song={song} queue={sortedSongs} index={i} showIndex />
+          ))
         ) : (
-          <>
-            {groups?.map(([name, groupSongs]) => (
-              <button
-                key={name}
-                onClick={() => setSelectedGroup(name)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 active:scale-[0.98] transition-all"
-              >
-                <AlbumArt
-                  src={groupSongs[0]?.albumArt}
-                  alt={name}
-                  size="sm"
-                />
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-foreground truncate">{name}</p>
-                  <p className="text-xs text-muted-foreground">{groupSongs.length} songs</p>
-                </div>
-                <ChevronRight size={16} className="text-muted-foreground" />
-              </button>
-            ))}
-          </>
+          groups?.map(([name, songs]) => (
+            <button
+              key={name}
+              onClick={() => setSelectedGroup(name)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 active:scale-[0.98] transition-all"
+            >
+              <AlbumArt src={songs[0]?.albumArt} alt={name} size="sm" />
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                <p className="text-xs text-muted-foreground">{songs.length} songs</p>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          ))
         )}
 
         {filtered.length === 0 && !isScanning && (

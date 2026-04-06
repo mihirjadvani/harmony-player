@@ -5,6 +5,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { useLibrary } from "@/context/LibraryContext";
 import AlbumArt from "@/components/AlbumArt";
 import SongItem from "@/components/SongItem";
+import AddSongsToPlaylist from "@/components/AddSongsToPlaylist";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ const PlaylistsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [addSongsOpen, setAddSongsOpen] = useState(false);
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
   const favoriteSongs = allSongs.filter((s) => favoriteIds.has(s.id));
@@ -47,9 +49,9 @@ const PlaylistsPage = () => {
   if (showFavorites) {
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 pt-6 pb-3">
+        <div className="px-4 pt-4 pb-3">
           <button onClick={() => setShowFavorites(false)} className="text-sm text-primary mb-2">← Back</button>
-          <h1 className="text-2xl font-bold text-foreground">Favorites</h1>
+          <h1 className="text-2xl font-bold text-foreground font-heading">Favorites</h1>
           <p className="text-xs text-muted-foreground">{favoriteSongs.length} songs</p>
         </div>
         <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-4">
@@ -70,16 +72,23 @@ const PlaylistsPage = () => {
 
   // Selected playlist detail view
   if (selectedPlaylist) {
+    const existingSongIds = new Set(selectedPlaylist.songs.map((s) => s.id));
     return (
       <div className="flex flex-col h-full">
-        <div className="px-4 pt-6 pb-3">
+        <div className="px-4 pt-4 pb-3">
           <button onClick={() => setSelectedPlaylistId(null)} className="text-sm text-primary mb-2">← Back</button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{selectedPlaylist.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground font-heading">{selectedPlaylist.name}</h1>
               <p className="text-xs text-muted-foreground">{selectedPlaylist.songs.length} songs</p>
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => setAddSongsOpen(true)}
+                className="p-2 rounded-xl bg-primary"
+              >
+                <Plus size={16} className="text-primary-foreground" />
+              </button>
               <button
                 onClick={() => {
                   setRenameId(selectedPlaylist.id);
@@ -102,11 +111,10 @@ const PlaylistsPage = () => {
           </div>
         </div>
 
-        {/* Rename dialog */}
         <Dialog open={!!renameId} onOpenChange={(o) => !o && setRenameId(null)}>
           <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-foreground">Rename Playlist</DialogTitle>
+              <DialogTitle className="text-foreground font-heading">Rename Playlist</DialogTitle>
             </DialogHeader>
             <Input
               value={renameValue}
@@ -117,6 +125,14 @@ const PlaylistsPage = () => {
             <Button onClick={handleRename} className="w-full">Rename</Button>
           </DialogContent>
         </Dialog>
+
+        <AddSongsToPlaylist
+          playlistId={selectedPlaylist.id}
+          playlistName={selectedPlaylist.name}
+          existingSongIds={existingSongIds}
+          open={addSongsOpen}
+          onClose={() => setAddSongsOpen(false)}
+        />
 
         <div className="flex-1 overflow-y-auto scrollbar-hide px-1 pb-4">
           {selectedPlaylist.songs.map((song, i) => (
@@ -134,7 +150,7 @@ const PlaylistsPage = () => {
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Music size={48} className="mb-4 opacity-30" />
               <p className="text-sm">No songs in this playlist</p>
-              <p className="text-xs mt-1">Use the menu on any song to add it</p>
+              <p className="text-xs mt-1">Tap + to add songs from your library</p>
             </div>
           )}
         </div>
@@ -145,17 +161,17 @@ const PlaylistsPage = () => {
   // Playlists list view
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 pt-6 pb-3 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Playlists</h1>
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-foreground font-heading">Playlists</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <button className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+            <button className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
               <Plus size={20} className="text-primary-foreground" />
             </button>
           </DialogTrigger>
           <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-foreground">New Playlist</DialogTitle>
+              <DialogTitle className="text-foreground font-heading">New Playlist</DialogTitle>
             </DialogHeader>
             <Input
               value={newName}
