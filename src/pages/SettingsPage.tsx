@@ -149,21 +149,70 @@ const SettingsPage = () => {
           </div>
         )}
 
-        <div className="flex items-center gap-4 p-4 bg-card rounded-2xl">
-          <Info size={20} className="text-primary" />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">About</p>
-            <p className="text-xs text-muted-foreground font-heading">Harmony Player v1.0</p>
+        {/* About Section */}
+        <div className="bg-card rounded-2xl p-5 space-y-5">
+          {/* Header */}
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+              <Info size={22} className="text-primary" />
+            </div>
+            <div>
+              <p className="text-base font-bold text-foreground">SoundWave Player</p>
+              <p className="text-xs text-muted-foreground">Version 1.0</p>
+            </div>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          {/* Supported Formats */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Supported Formats</p>
+            <div className="flex flex-wrap gap-1.5">
+              {["MP3", "WAV", "AAC", "FLAC", "OGG", "M4A", "OPUS", "WebM"].map((f) => (
+                <span key={f} className="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-secondary text-secondary-foreground">
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          {/* Metadata Support */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Metadata Support</p>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />ID3v2 tag extraction</li>
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Song title, artist, album &amp; genre</li>
+            </ul>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          {/* Album Artwork */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Album Artwork</p>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Embedded cover art (APIC frames)</li>
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Album thumbnails in player UI</li>
+            </ul>
+          </div>
+
+          <div className="h-px bg-border" />
+
+          {/* Features */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Features</p>
+            <ul className="space-y-1.5 text-xs text-muted-foreground">
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Playlist support</li>
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Background playback</li>
+              <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-primary shrink-0" />Smooth &amp; minimal UI experience</li>
+            </ul>
           </div>
         </div>
       </div>
 
-      <div className="mt-auto py-6">
-        <p className="text-xs text-muted-foreground text-center">
-          <span className="font-heading">Harmony Player</span><br />
-          Built with ❤️
-        </p>
-      </div>
+      <div className="py-6" />
     </div>
   );
 };
