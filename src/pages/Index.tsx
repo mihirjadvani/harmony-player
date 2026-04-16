@@ -8,7 +8,7 @@ import { EqualizerProvider } from "@/context/EqualizerContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
 import NowPlayingFull from "@/components/NowPlayingFull";
-import VolumeControl from "@/components/VolumeControl";
+
 import LibraryPage from "@/pages/LibraryPage";
 import PlaylistsPage from "@/pages/PlaylistsPage";
 import NowPlayingPage from "@/pages/NowPlayingPage";
@@ -44,7 +44,7 @@ const InnerApp = () => {
         {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
         <BottomNav active={tab} onChange={setTab} />
         {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
-        <VolumeControl />
+        
       </div>
     </SleepTimerProvider>
   );
