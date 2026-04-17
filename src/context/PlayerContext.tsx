@@ -9,6 +9,8 @@ interface PlayerContextType extends PlayerState {
   seekTo: (time: number) => void;
   toggleShuffle: () => void;
   setRepeatMode: (mode: RepeatMode) => void;
+  volume: number;
+  setVolume: (v: number) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
