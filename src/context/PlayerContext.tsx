@@ -262,6 +262,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         seekTo,
         toggleShuffle,
         setRepeatMode,
+        volume,
+        setVolume,
       }}
     >
       {children}
