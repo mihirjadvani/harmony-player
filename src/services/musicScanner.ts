@@ -1,6 +1,7 @@
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { Song } from "@/types/music";
+import { enrichMetadata } from "./metadataEnricher";
 
 const AUDIO_EXTENSIONS = [
   ".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma", ".opus", ".webm",
@@ -227,16 +228,23 @@ export async function scanDeviceForMusic(
         });
 
         const meta = await extractMetadata(file.uri, file.name);
-        const song: Song = {
-          id: file.uri,
+        const enriched = await enrichMetadata({
+          fileName: file.name,
           title: meta.title,
           artist: meta.artist,
           album: meta.album,
+          albumArt: meta.albumArt,
+        });
+        const song: Song = {
+          id: file.uri,
+          title: enriched.title || meta.title,
+          artist: enriched.artist || meta.artist,
+          album: enriched.album || meta.album,
           genre: meta.genre,
           duration: meta.duration,
           fileSize: file.size,
           filePath: file.uri,
-          albumArt: meta.albumArt,
+          albumArt: enriched.albumArt || meta.albumArt,
           format: getFormat(file.name),
         };
         return song;
