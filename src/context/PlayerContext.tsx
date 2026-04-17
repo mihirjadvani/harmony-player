@@ -11,6 +11,7 @@ interface PlayerContextType extends PlayerState {
   setRepeatMode: (mode: RepeatMode) => void;
   volume: number;
   setVolume: (v: number) => void;
+  getAudioElement: () => HTMLAudioElement | null;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
