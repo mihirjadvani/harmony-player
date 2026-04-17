@@ -144,13 +144,20 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   }, [gains, isEnabled]);
 
+  const ensureRunning = useCallback(() => {
+    connectEQ();
+    const ctx = audioContextRef.current;
+    if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+  }, [connectEQ]);
+
   const setPreset = useCallback((name: string) => {
     const preset = EQ_PRESETS.find((p) => p.name === name);
     if (preset) {
       setActivePreset(name);
       setGains([...preset.gains]);
+      ensureRunning();
     }
-  }, []);
+  }, [ensureRunning]);
 
   const setBandGain = useCallback((bandIndex: number, gain: number) => {
     setGains((prev) => {
@@ -159,11 +166,13 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       return next;
     });
     setActivePreset("Custom");
-  }, []);
+    ensureRunning();
+  }, [ensureRunning]);
 
   const toggleEnabled = useCallback(() => {
     setIsEnabled((prev) => !prev);
-  }, []);
+    ensureRunning();
+  }, [ensureRunning]);
 
   return (
     <EqualizerContext.Provider
