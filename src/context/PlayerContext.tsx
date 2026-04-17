@@ -24,6 +24,20 @@ export const usePlayer = () => {
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const [volume, setVolumeState] = useState<number>(() => {
+    if (typeof window === "undefined") return 75;
+    const saved = localStorage.getItem("player.volume");
+    const n = saved ? parseFloat(saved) : NaN;
+    return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 75;
+  });
+
+  const setVolume = useCallback((v: number) => {
+    const clamped = Math.max(0, Math.min(100, v));
+    setVolumeState(clamped);
+    if (audioRef.current) audioRef.current.volume = clamped / 100;
+    try { localStorage.setItem("player.volume", String(clamped)); } catch {}
+  }, []);
+
   const [state, setState] = useState<PlayerState>({
     currentSong: null,
     isPlaying: false,
