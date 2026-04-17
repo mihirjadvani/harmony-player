@@ -9,11 +9,10 @@ export interface EQPreset {
 export const EQ_PRESETS: EQPreset[] = [
   { name: "Normal", gains: [0, 0, 0, 0, 0] },
   { name: "Bass Boost", gains: [6, 4, 0, 0, 0] },
-  { name: "Rock", gains: [4, 2, -1, 3, 4] },
-  { name: "Pop", gains: [-1, 2, 4, 2, -1] },
-  { name: "Jazz", gains: [3, 1, -1, 1, 3] },
-  { name: "Classical", gains: [0, 0, 0, 3, 5] },
-  { name: "Dance", gains: [5, 3, 1, 0, -1] },
+  { name: "Rock", gains: [4, 2, -2, 3, 4] },
+  { name: "Pop", gains: [2, 3, 0, 3, 2] },
+  { name: "Jazz", gains: [3, 2, 2, 3, 4] },
+  { name: "Dance", gains: [5, 4, -1, 2, 3] },
   { name: "Flat", gains: [0, 0, 0, 0, 0] },
 ];
 
