@@ -1,65 +1,71 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect } from "react";
+import { usePlayer } from "@/context/PlayerContext";
 
 interface VolumeKnobProps {
   size?: number;
 }
 
 const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
-  const [volume, setVolume] = useState(75);
-  const [isDragging, setIsDragging] = useState(false);
+  const { volume, setVolume } = usePlayer();
   const knobRef = useRef<HTMLDivElement>(null);
+  const activePointerRef = useRef<number | null>(null);
   const lastAngleRef = useRef<number | null>(null);
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
 
   // Map volume 0-100 to angle -135 to 135 (270° sweep) for visual indicator
-  const volumeToAngle = (v: number) => -135 + (v / 100) * 270;
-  const angle = volumeToAngle(volume);
-
-  // Sync with audio elements
-  useEffect(() => {
-    const audios = document.querySelectorAll("audio");
-    audios.forEach((a) => (a.volume = volume / 100));
-  }, [volume]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const audios = document.querySelectorAll("audio");
-      audios.forEach((a) => (a.volume = volume / 100));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [volume]);
+  const angle = -135 + (volume / 100) * 270;
 
   const getRawAngle = useCallback((clientX: number, clientY: number) => {
-    if (!knobRef.current) return 0;
-    const rect = knobRef.current.getBoundingClientRect();
+    const el = knobRef.current;
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const rad = Math.atan2(clientY - cy, clientX - cx);
-    return (rad * 180) / Math.PI; // -180..180, 0° = right, 90° = down
+    return (Math.atan2(clientY - cy, clientX - cx) * 180) / Math.PI;
   }, []);
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsDragging(true);
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Ignore extra fingers — only first touch controls the knob
+    if (activePointerRef.current !== null) return;
+    activePointerRef.current = e.pointerId;
     lastAngleRef.current = getRawAngle(e.clientX, e.clientY);
-  };
+    knobRef.current?.setPointerCapture?.(e.pointerId);
+    e.preventDefault();
+  }, [getRawAngle]);
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || lastAngleRef.current === null) return;
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (e.pointerId !== activePointerRef.current) return;
+    if (lastAngleRef.current === null) return;
     const current = getRawAngle(e.clientX, e.clientY);
     let delta = current - lastAngleRef.current;
-    // Normalize to [-180, 180] to handle wraparound
     if (delta > 180) delta -= 360;
     if (delta < -180) delta += 360;
     lastAngleRef.current = current;
-    // Clockwise (positive delta) = increase volume; 270° sweep = 100 units
-    const volumeDelta = (delta / 270) * 100;
-    setVolume((v) => Math.max(0, Math.min(100, v + volumeDelta)));
-  };
+    // Clockwise (positive delta) → volume up. 270° sweep maps to 100 units.
+    const next = Math.max(0, Math.min(100, volumeRef.current + (delta / 270) * 100));
+    setVolume(next);
+  }, [getRawAngle, setVolume]);
 
-  const handlePointerUp = () => {
-    setIsDragging(false);
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerId !== activePointerRef.current) return;
+    activePointerRef.current = null;
     lastAngleRef.current = null;
-  };
+    try { knobRef.current?.releasePointerCapture?.(e.pointerId); } catch {}
+  }, []);
+
+  // Wheel scroll fine-tune (desktop)
+  useEffect(() => {
+    const el = knobRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const step = e.deltaY < 0 ? 2 : -2;
+      setVolume(Math.max(0, Math.min(100, volumeRef.current + step)));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [setVolume]);
 
   // Generate dot positions around the knob
   const dots = [];
@@ -71,22 +77,20 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
     const x = Math.cos(rad) * radius;
     const y = Math.sin(rad) * radius;
     const isActive = dotAngle <= angle;
-    dots.push({ x, y, isActive, angle: dotAngle });
+    dots.push({ x, y, isActive });
   }
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      {/* Volume percentage */}
+    <div className="flex flex-col items-center gap-3 select-none">
       <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase">
         Volume
       </span>
 
       <div className="relative" style={{ width: size + 40, height: size + 40 }}>
-        {/* Dots around the knob */}
         {dots.map((dot, i) => (
           <div
             key={i}
-            className="absolute rounded-full transition-all duration-150"
+            className="absolute rounded-full pointer-events-none transition-all duration-150"
             style={{
               width: dot.isActive ? 6 : 4,
               height: dot.isActive ? 6 : 4,
@@ -95,14 +99,12 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
               background: dot.isActive
                 ? `hsl(var(--primary))`
                 : `hsl(var(--muted-foreground) / 0.3)`,
-              boxShadow: dot.isActive
-                ? `0 0 8px hsl(var(--primary) / 0.6)`
-                : "none",
+              boxShadow: dot.isActive ? `0 0 8px hsl(var(--primary) / 0.6)` : "none",
             }}
           />
         ))}
 
-        {/* Main knob */}
+        {/* Main knob — gesture target */}
         <div
           ref={knobRef}
           className="absolute cursor-grab active:cursor-grabbing"
@@ -112,14 +114,19 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
             left: 20,
             top: 20,
             touchAction: "none",
+            WebkitUserSelect: "none",
+            userSelect: "none",
+            WebkitTouchCallout: "none",
           }}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onLostPointerCapture={handlePointerUp}
         >
-          {/* Outer ring */}
+          {/* Outer arc ring */}
           <div
-            className="absolute inset-0 rounded-full"
+            className="absolute inset-0 rounded-full pointer-events-none"
             style={{
               background: `conic-gradient(
                 from 225deg,
@@ -129,7 +136,6 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
                 hsl(var(--muted) / 0.3) 270deg
               )`,
               padding: 3,
-              borderRadius: "50%",
             }}
           >
             <div className="w-full h-full rounded-full bg-card" />
@@ -137,18 +143,13 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
 
           {/* Inner knob body */}
           <div
-            className="absolute rounded-full"
+            className="absolute rounded-full pointer-events-none"
             style={{
               inset: 6,
               background: `radial-gradient(circle at 40% 35%, hsl(var(--secondary)), hsl(var(--card)) 60%, hsl(0 0% 5%) 100%)`,
-              boxShadow: `
-                inset 0 2px 10px hsl(0 0% 100% / 0.05),
-                inset 0 -4px 10px hsl(0 0% 0% / 0.4),
-                0 4px 20px hsl(0 0% 0% / 0.5)
-              `,
+              boxShadow: `inset 0 2px 10px hsl(0 0% 100% / 0.05), inset 0 -4px 10px hsl(0 0% 0% / 0.4), 0 4px 20px hsl(0 0% 0% / 0.5)`,
             }}
           >
-            {/* Mesh pattern overlay */}
             <div
               className="absolute inset-3 rounded-full opacity-30"
               style={{
@@ -160,13 +161,12 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
 
           {/* Rotating indicator */}
           <div
-            className="absolute inset-0 transition-transform"
+            className="absolute inset-0 pointer-events-none"
             style={{
               transform: `rotate(${angle}deg)`,
-              transitionDuration: isDragging ? "0ms" : "150ms",
+              transition: activePointerRef.current !== null ? "none" : "transform 120ms ease-out",
             }}
           >
-            {/* Indicator line */}
             <div
               className="absolute left-1/2 -translate-x-1/2 top-2"
               style={{
@@ -180,33 +180,14 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
           </div>
         </div>
 
-        {/* MIN / MAX labels */}
-        <span
-          className="absolute text-[9px] font-semibold text-muted-foreground tracking-wider"
-          style={{
-            left: -2,
-            bottom: 2,
-          }}
-        >
-          MIN
-        </span>
-        <span
-          className="absolute text-[9px] font-semibold text-muted-foreground tracking-wider"
-          style={{
-            right: -4,
-            bottom: 2,
-          }}
-        >
-          MAX
-        </span>
+        <span className="absolute text-[9px] font-semibold text-muted-foreground tracking-wider" style={{ left: -2, bottom: 2 }}>MIN</span>
+        <span className="absolute text-[9px] font-semibold text-muted-foreground tracking-wider" style={{ right: -4, bottom: 2 }}>MAX</span>
       </div>
 
-      {/* Volume value */}
       <span className="text-2xl font-bold text-foreground tabular-nums">
         {Math.round(volume)}%
       </span>
 
-      {/* OFF indicator */}
       {volume === 0 && (
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
