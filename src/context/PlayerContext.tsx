@@ -11,6 +11,7 @@ interface PlayerContextType extends PlayerState {
   setRepeatMode: (mode: RepeatMode) => void;
   volume: number;
   setVolume: (v: number) => void;
+  getAudioElement: () => HTMLAudioElement | null;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -53,6 +54,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     const audio = new Audio();
     audio.preload = "auto";
+    audio.crossOrigin = "anonymous";
     audio.volume = volume / 100;
     audioRef.current = audio;
 
@@ -251,6 +253,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setState((prev) => ({ ...prev, repeat: mode }));
   }, []);
 
+  const getAudioElement = useCallback(() => audioRef.current, []);
+
   return (
     <PlayerContext.Provider
       value={{
@@ -264,6 +268,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRepeatMode,
         volume,
         setVolume,
+        getAudioElement,
       }}
     >
       {children}
