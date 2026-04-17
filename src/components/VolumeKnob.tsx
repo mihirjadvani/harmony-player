@@ -203,7 +203,7 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
 
       {/* Volume value */}
       <span className="text-2xl font-bold text-foreground tabular-nums">
-        {volume}%
+        {Math.round(volume)}%
       </span>
 
       {/* OFF indicator */}
