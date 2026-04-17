@@ -1,4 +1,5 @@
 import { Song } from "@/types/music";
+import { enrichMetadata } from "./metadataEnricher";
 
 function getFormat(filename: string): string {
   return filename.split(".").pop()?.toUpperCase() || "UNKNOWN";
@@ -72,6 +73,23 @@ export async function parseAudioFiles(
       }
     } catch (err) {
       console.warn("Metadata extraction failed for", file.name, err);
+    }
+
+    // Enrich missing metadata via filename parsing + iTunes API
+    try {
+      const enriched = await enrichMetadata({
+        fileName: file.name,
+        title,
+        artist,
+        album,
+        albumArt,
+      });
+      title = enriched.title || title;
+      artist = enriched.artist || artist;
+      album = enriched.album || album;
+      albumArt = enriched.albumArt || albumArt;
+    } catch (err) {
+      console.warn("Enrichment failed for", file.name, err);
     }
 
     songs.push({
