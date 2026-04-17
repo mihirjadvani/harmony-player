@@ -8,11 +8,10 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
   const [volume, setVolume] = useState(75);
   const [isDragging, setIsDragging] = useState(false);
   const knobRef = useRef<HTMLDivElement>(null);
+  const lastAngleRef = useRef<number | null>(null);
 
-  // Map volume 0-100 to angle -135 to 135 (270° sweep)
+  // Map volume 0-100 to angle -135 to 135 (270° sweep) for visual indicator
   const volumeToAngle = (v: number) => -135 + (v / 100) * 270;
-  const angleToVolume = (angle: number) => Math.max(0, Math.min(100, Math.round(((angle + 135) / 270) * 100)));
-
   const angle = volumeToAngle(volume);
 
   // Sync with audio elements
@@ -29,36 +28,38 @@ const VolumeKnob = ({ size = 160 }: VolumeKnobProps) => {
     return () => clearInterval(interval);
   }, [volume]);
 
-  const getAngleFromEvent = useCallback((clientX: number, clientY: number) => {
+  const getRawAngle = useCallback((clientX: number, clientY: number) => {
     if (!knobRef.current) return 0;
     const rect = knobRef.current.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const rad = Math.atan2(clientY - cy, clientX - cx);
-    let deg = (rad * 180) / Math.PI + 90; // 0° at top
-    if (deg < -180) deg += 360;
-    if (deg > 180) deg -= 360;
-    return deg;
+    return (rad * 180) / Math.PI; // -180..180, 0° = right, 90° = down
   }, []);
-
-  const handleInteraction = useCallback((clientX: number, clientY: number) => {
-    const deg = getAngleFromEvent(clientX, clientY);
-    if (deg >= -135 && deg <= 135) {
-      setVolume(angleToVolume(deg));
-    }
-  }, [getAngleFromEvent]);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     setIsDragging(true);
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-    handleInteraction(e.clientX, e.clientY);
+    lastAngleRef.current = getRawAngle(e.clientX, e.clientY);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (isDragging) handleInteraction(e.clientX, e.clientY);
+    if (!isDragging || lastAngleRef.current === null) return;
+    const current = getRawAngle(e.clientX, e.clientY);
+    let delta = current - lastAngleRef.current;
+    // Normalize to [-180, 180] to handle wraparound
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    lastAngleRef.current = current;
+    // Clockwise (positive delta) = increase volume; 270° sweep = 100 units
+    const volumeDelta = (delta / 270) * 100;
+    setVolume((v) => Math.max(0, Math.min(100, v + volumeDelta)));
   };
 
-  const handlePointerUp = () => setIsDragging(false);
+  const handlePointerUp = () => {
+    setIsDragging(false);
+    lastAngleRef.current = null;
+  };
 
   // Generate dot positions around the knob
   const dots = [];
