@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from "react";
+import { usePlayer } from "./PlayerContext";
 
 export interface EQPreset {
   name: string;
