@@ -39,13 +39,15 @@ export const useEqualizer = () => {
 const STORAGE_KEY = "soundwave_eq";
 
 export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { getAudioElement, isPlaying } = usePlayer();
   const [activePreset, setActivePreset] = useState("Normal");
   const [gains, setGains] = useState<number[]>([0, 0, 0, 0, 0]);
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
   const audioContextRef = useRef<AudioContext | null>(null);
   const filtersRef = useRef<BiquadFilterNode[]>([]);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const connectedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const bypassGainRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
     try {
@@ -63,52 +65,82 @@ export const EqualizerProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ preset: activePreset, gains, enabled: isEnabled }));
   }, [activePreset, gains, isEnabled]);
 
+  // Connect EQ filters into audio graph (one-time per audio element)
+  const connectEQ = useCallback(() => {
+    const audioEl = getAudioElement();
+    if (!audioEl) return;
+
+    // Create AudioContext lazily
+    if (!audioContextRef.current) {
+      try {
+        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+        audioContextRef.current = new Ctx();
+      } catch (e) {
+        console.error("[EQ] AudioContext failed", e);
+        return;
+      }
+    }
+    const ctx = audioContextRef.current;
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
+    // Create MediaElementSource (only once per element)
+    if (!sourceRef.current || connectedAudioRef.current !== audioEl) {
+      try {
+        sourceRef.current = ctx.createMediaElementSource(audioEl);
+        connectedAudioRef.current = audioEl;
+      } catch (e) {
+        // Already connected — fine
+        return;
+      }
+
+      // Build filter chain
+      filtersRef.current = EQ_FREQUENCIES.map((freq, i) => {
+        const filter = ctx.createBiquadFilter();
+        filter.type = i === 0 ? "lowshelf" : i === EQ_FREQUENCIES.length - 1 ? "highshelf" : "peaking";
+        filter.frequency.value = freq;
+        filter.gain.value = isEnabled ? gains[i] : 0;
+        if (filter.type === "peaking") filter.Q.value = 1;
+        return filter;
+      });
+
+      const output = ctx.createGain();
+      output.gain.value = 1;
+      bypassGainRef.current = output;
+
+      let prev: AudioNode = sourceRef.current!;
+      filtersRef.current.forEach((f) => {
+        prev.connect(f);
+        prev = f;
+      });
+      prev.connect(output);
+      output.connect(ctx.destination);
+      console.log("[EQ] Audio chain connected with", filtersRef.current.length, "bands");
+    }
+  }, [getAudioElement, gains, isEnabled]);
+
+  // Try connecting whenever playback starts
   useEffect(() => {
-    const connectToAudio = () => {
-      const audioEl = document.querySelector("audio") as HTMLAudioElement | null;
-      if (!audioEl && !connectedAudioRef.current) return;
-      const target = audioEl || connectedAudioRef.current;
-      if (!target) return;
+    if (isPlaying) connectEQ();
+  }, [isPlaying, connectEQ]);
 
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-      }
-      const ctx = audioContextRef.current;
-
-      if (!sourceRef.current || connectedAudioRef.current !== target) {
-        try {
-          sourceRef.current = ctx.createMediaElementSource(target);
-          connectedAudioRef.current = target;
-        } catch {}
-      }
-
-      if (filtersRef.current.length === 0) {
-        filtersRef.current = EQ_FREQUENCIES.map((freq, i) => {
-          const filter = ctx.createBiquadFilter();
-          filter.type = i === 0 ? "lowshelf" : i === EQ_FREQUENCIES.length - 1 ? "highshelf" : "peaking";
-          filter.frequency.value = freq;
-          filter.gain.value = gains[i];
-          if (filter.type === "peaking") filter.Q.value = 1;
-          return filter;
-        });
-
-        let prev: AudioNode = sourceRef.current!;
-        filtersRef.current.forEach((f) => {
-          prev.connect(f);
-          prev = f;
-        });
-        prev.connect(ctx.destination);
-      }
-    };
-
-    const interval = setInterval(connectToAudio, 1000);
-    connectToAudio();
-    return () => clearInterval(interval);
-  }, []);
-
+  // Also try once on mount
   useEffect(() => {
+    connectEQ();
+  }, [connectEQ]);
+
+  // Apply gain changes in real-time with smooth ramp
+  useEffect(() => {
+    const ctx = audioContextRef.current;
+    if (!ctx) return;
+    const now = ctx.currentTime;
     filtersRef.current.forEach((filter, i) => {
-      filter.gain.value = isEnabled ? gains[i] : 0;
+      const target = isEnabled ? gains[i] : 0;
+      try {
+        filter.gain.cancelScheduledValues(now);
+        filter.gain.setTargetAtTime(target, now, 0.02);
+      } catch {
+        filter.gain.value = target;
+      }
     });
   }, [gains, isEnabled]);
 
