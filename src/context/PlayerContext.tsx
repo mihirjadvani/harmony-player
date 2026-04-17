@@ -253,6 +253,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setState((prev) => ({ ...prev, repeat: mode }));
   }, []);
 
+  const getAudioElement = useCallback(() => audioRef.current, []);
+
   return (
     <PlayerContext.Provider
       value={{
@@ -266,6 +268,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRepeatMode,
         volume,
         setVolume,
+        getAudioElement,
       }}
     >
       {children}
