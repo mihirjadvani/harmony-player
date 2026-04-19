@@ -76,7 +76,7 @@ const LibraryPage = () => {
             <button
               onClick={addFilesFromPC}
               disabled={isScanning}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-secondary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl glass-card text-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
             >
               <FilePlus size={16} />
               <span>Files</span>
@@ -84,7 +84,7 @@ const LibraryPage = () => {
             <button
               onClick={addFolderFromPC}
               disabled={isScanning}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-transform disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold active:scale-95 transition-transform disabled:opacity-50 neon-glow-soft"
             >
               <FolderOpen size={16} />
               <span>Folder</span>
@@ -93,7 +93,7 @@ const LibraryPage = () => {
         </div>
 
         {isScanning && scanProgress && (
-          <div className="mb-3 p-3 bg-card rounded-xl animate-fade-in">
+          <div className="mb-3 p-3 glass-card animate-fade-in">
             <div className="flex items-center gap-2 mb-2">
               <Loader2 size={14} className="animate-spin text-primary" />
               <span className="text-xs font-medium text-foreground">
@@ -106,10 +106,10 @@ const LibraryPage = () => {
               <p className="text-xs text-muted-foreground truncate">{scanProgress.currentFile}</p>
             )}
             {scanProgress.total > 0 && (
-              <div className="mt-2 h-1 bg-secondary rounded-full overflow-hidden">
+              <div className="mt-2 h-1 bg-white/5 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-300"
-                  style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%` }}
+                  className="h-full bg-gradient-primary rounded-full transition-all duration-300"
+                  style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, boxShadow: "0 0 8px hsl(var(--primary) / 0.6)" }}
                 />
               </div>
             )}
@@ -122,7 +122,7 @@ const LibraryPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search songs, artists, albums..."
-            className="pl-10 bg-secondary border-none text-foreground placeholder:text-muted-foreground rounded-xl"
+            className="pl-10 glass-card border-0 text-foreground placeholder:text-muted-foreground rounded-xl h-11"
           />
         </div>
 
@@ -130,12 +130,11 @@ const LibraryPage = () => {
           {(["title", "artist", "album"] as const).map((key) => (
             <button
               key={key}
-              onClick={() => {
-                setViewMode(key);
-                setSelectedGroup(null);
-              }}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                viewMode === key ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+              onClick={() => { setViewMode(key); setSelectedGroup(null); }}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                viewMode === key
+                  ? "bg-primary text-primary-foreground neon-glow-soft"
+                  : "glass-card text-secondary-foreground"
               }`}
             >
               {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -162,7 +161,7 @@ const LibraryPage = () => {
             <button
               key={name}
               onClick={() => setSelectedGroup(name)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-secondary/50 active:scale-[0.98] transition-all"
+              className="w-full flex items-center gap-3 px-3 py-2.5 mx-1 my-1 rounded-2xl glass-card active:scale-[0.98] transition-all"
             >
               <AlbumArt src={songs[0]?.albumArt} alt={name} size="sm" />
               <div className="flex-1 min-w-0 text-left">
@@ -176,22 +175,25 @@ const LibraryPage = () => {
 
         {filtered.length === 0 && !isScanning && (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-            <Music size={56} className="mb-4 opacity-20" />
-            <p className="text-base font-medium text-foreground mb-1">No songs yet</p>
+            <div className="relative mb-5">
+              <div className="absolute inset-0 rounded-full blur-2xl" style={{ background: "hsl(var(--primary) / 0.25)" }} />
+              <Music size={56} className="relative opacity-40 text-primary" />
+            </div>
+            <p className="text-base font-semibold text-foreground mb-1">No songs yet</p>
             <p className="text-sm text-muted-foreground mb-5 text-center px-8">
-              Add audio files from your PC to start listening
+              Add audio files from your device to start listening
             </p>
             <div className="flex gap-3">
               <button
                 onClick={addFilesFromPC}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium active:scale-95 transition-transform"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass-card text-foreground text-sm font-medium active:scale-95 transition-transform"
               >
                 <FilePlus size={18} />
                 Add Files
               </button>
               <button
                 onClick={addFolderFromPC}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium active:scale-95 transition-transform"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform neon-glow-soft"
               >
                 <FolderOpen size={18} />
                 Add Folder
