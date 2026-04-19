@@ -111,19 +111,19 @@ const NowPlayingPage = () => {
         </button>
         <button
           onClick={togglePlay}
-          className="w-14 h-14 rounded-full bg-primary flex items-center justify-center active:scale-90 transition-transform"
-          style={{ boxShadow: "var(--shadow-glow)" }}
+          className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center active:scale-95 transition-transform animate-pulse-glow"
         >
           {isPlaying ? (
-            <Pause size={24} className="text-primary-foreground" fill="currentColor" />
+            <Pause size={26} className="text-primary-foreground" fill="currentColor" />
           ) : (
-            <Play size={24} className="text-primary-foreground ml-0.5" fill="currentColor" />
+            <Play size={26} className="text-primary-foreground ml-0.5" fill="currentColor" />
           )}
         </button>
         <button onClick={nextSong} className="p-3 text-foreground active:scale-90 transition-transform">
           <SkipForward size={24} fill="currentColor" />
         </button>
-        <button onClick={cycleRepeat} className={`p-2 ${repeat !== "off" ? "text-primary" : "text-muted-foreground"}`}>
+        <button onClick={cycleRepeat} className={`p-2 ${repeat !== "off" ? "text-primary" : "text-muted-foreground"}`}
+                style={repeat !== "off" ? { filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" } : undefined}>
           {repeat === "one" ? <Repeat1 size={18} /> : <Repeat size={18} />}
         </button>
       </div>

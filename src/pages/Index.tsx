@@ -28,13 +28,21 @@ const InnerApp = () => {
 
   return (
     <SleepTimerProvider onTimerEnd={handleSleepTimerEnd}>
-      <div className="flex flex-col h-screen bg-background">
+      <div className="relative flex flex-col h-screen">
+        {/* Ambient neon glows */}
+        <div aria-hidden className="pointer-events-none fixed -top-24 -left-20 w-72 h-72 rounded-full opacity-30 blur-3xl"
+             style={{ background: "radial-gradient(circle, hsl(var(--primary) / 0.35), transparent 70%)" }} />
+        <div aria-hidden className="pointer-events-none fixed -bottom-24 -right-20 w-80 h-80 rounded-full opacity-20 blur-3xl"
+             style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.35), transparent 70%)" }} />
+
         {/* App Header */}
-        <header className="px-4 pt-4 pb-2 flex items-center justify-center">
-          <h1 className="text-xl font-heading text-gradient tracking-wide">Harmony Player</h1>
+        <header className="relative px-4 pt-4 pb-2 flex items-center justify-center">
+          <h1 className="text-xl font-heading text-gradient tracking-wide" style={{ filter: "drop-shadow(0 0 12px hsl(var(--primary) / 0.4))" }}>
+            Harmony Player
+          </h1>
         </header>
 
-        <main className="flex-1 overflow-hidden">
+        <main className="relative flex-1 overflow-hidden">
           {tab === "library" && <LibraryPage />}
           {tab === "playlists" && <PlaylistsPage />}
           {tab === "nowplaying" && <NowPlayingPage />}
@@ -44,7 +52,6 @@ const InnerApp = () => {
         {tab !== "nowplaying" && <MiniPlayer onExpand={() => setShowFullPlayer(true)} />}
         <BottomNav active={tab} onChange={setTab} />
         {showFullPlayer && <NowPlayingFull onClose={() => setShowFullPlayer(false)} />}
-        
       </div>
     </SleepTimerProvider>
   );

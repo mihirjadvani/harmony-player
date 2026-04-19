@@ -115,19 +115,19 @@ const NowPlayingFull = ({ onClose }: NowPlayingFullProps) => {
           </button>
           <button
             onClick={togglePlay}
-            className="w-16 h-16 rounded-full bg-primary flex items-center justify-center active:scale-90 transition-transform shadow-lg"
-            style={{ boxShadow: "var(--shadow-glow)" }}
+            className="w-20 h-20 rounded-full bg-gradient-primary flex items-center justify-center active:scale-95 transition-transform animate-pulse-glow"
           >
             {isPlaying ? (
-              <Pause size={28} className="text-primary-foreground" fill="currentColor" />
+              <Pause size={32} className="text-primary-foreground" fill="currentColor" />
             ) : (
-              <Play size={28} className="text-primary-foreground ml-1" fill="currentColor" />
+              <Play size={32} className="text-primary-foreground ml-1" fill="currentColor" />
             )}
           </button>
           <button onClick={nextSong} className="p-3 text-foreground active:scale-90 transition-transform">
             <SkipForward size={28} fill="currentColor" />
           </button>
-          <button onClick={cycleRepeat} className={`p-2 ${repeat !== "off" ? "text-primary" : "text-muted-foreground"}`}>
+          <button onClick={cycleRepeat} className={`p-2 ${repeat !== "off" ? "text-primary" : "text-muted-foreground"}`}
+                  style={repeat !== "off" ? { filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" } : undefined}>
             {repeat === "one" ? <Repeat1 size={20} /> : <Repeat size={20} />}
           </button>
         </div>

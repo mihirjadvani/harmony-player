@@ -165,11 +165,13 @@ const PlaylistsPage = () => {
         <h1 className="text-2xl font-bold text-foreground font-heading">Playlists</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <button className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg" style={{ boxShadow: "var(--shadow-glow)" }}>
-              <Plus size={20} className="text-primary-foreground" />
+            <button
+              className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center text-primary-foreground active:scale-95 transition-transform animate-pulse-glow"
+            >
+              <Plus size={22} strokeWidth={2.5} />
             </button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border">
+          <DialogContent className="glass border-0">
             <DialogHeader>
               <DialogTitle className="text-foreground font-heading">New Playlist</DialogTitle>
             </DialogHeader>
@@ -177,10 +179,10 @@ const PlaylistsPage = () => {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Playlist name"
-              className="bg-secondary border-none text-foreground"
+              className="glass-card border-0 text-foreground"
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             />
-            <Button onClick={handleCreate} className="w-full">Create</Button>
+            <Button onClick={handleCreate} className="w-full neon-glow-soft">Create</Button>
           </DialogContent>
         </Dialog>
       </div>
@@ -189,9 +191,10 @@ const PlaylistsPage = () => {
         {/* Favorites card */}
         <button
           onClick={() => setShowFavorites(true)}
-          className="w-full flex items-center gap-3 p-3 mb-3 bg-card rounded-2xl active:scale-[0.97] transition-transform"
+          className="w-full flex items-center gap-3 p-3 mb-4 glass-card active:scale-[0.97] transition-transform"
         >
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center shrink-0"
+               style={{ background: "linear-gradient(135deg, hsl(var(--primary) / 0.25), hsl(var(--accent) / 0.1))", boxShadow: "var(--shadow-glow-soft)" }}>
             <Heart size={24} className="text-primary fill-primary" />
           </div>
           <div className="text-left">
@@ -202,7 +205,7 @@ const PlaylistsPage = () => {
 
         {playlists.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-            <Music size={48} className="mb-4 opacity-20" />
+            <Music size={48} className="mb-4 opacity-30 text-primary" />
             <p className="text-base font-medium text-foreground mb-1">No playlists yet</p>
             <p className="text-sm text-center px-8">Create a playlist to organize your music</p>
           </div>
@@ -212,15 +215,12 @@ const PlaylistsPage = () => {
           {playlists.map((pl) => (
             <div
               key={pl.id}
-              className="relative group bg-card rounded-2xl p-3 cursor-pointer active:scale-[0.97] transition-transform"
+              className="relative group glass-card p-3 cursor-pointer active:scale-[0.97] transition-all hover:border-primary/30"
               onClick={() => setSelectedPlaylistId(pl.id)}
             >
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  deletePlaylist(pl.id);
-                }}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                onClick={(e) => { e.stopPropagation(); deletePlaylist(pl.id); }}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-background/70 backdrop-blur opacity-0 group-hover:opacity-100 transition-opacity z-10"
               >
                 <Trash2 size={14} className="text-destructive" />
               </button>
@@ -229,7 +229,7 @@ const PlaylistsPage = () => {
                   <AlbumArt key={`${s.id}-${i}`} src={s.albumArt} alt={s.title} size="sm" className="w-full h-auto aspect-square rounded-none" />
                 ))}
                 {Array.from({ length: Math.max(0, 4 - pl.songs.length) }).map((_, i) => (
-                  <div key={`empty-${i}`} className="aspect-square bg-secondary flex items-center justify-center">
+                  <div key={`empty-${i}`} className="aspect-square bg-white/5 flex items-center justify-center">
                     <Music size={14} className="text-muted-foreground" />
                   </div>
                 ))}

@@ -17,20 +17,26 @@ const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 const BottomNav = ({ active, onChange }: BottomNavProps) => {
   return (
-    <nav className="glass border-t border-border safe-bottom">
-      <div className="flex items-center justify-around py-2">
+    <nav className="glass safe-bottom mx-3 mb-3 rounded-2xl">
+      <div className="flex items-center justify-around py-2 px-1">
         {tabs.map(({ id, label, icon: Icon }) => {
           const isActive = active === id;
           return (
             <button
               key={id}
               onClick={() => onChange(id)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all duration-200 ${
-                isActive ? "text-primary" : "text-muted-foreground"
+              className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon size={20} className={isActive ? "text-primary" : ""} />
-              <span className="text-[9px] font-medium">{label}</span>
+              {isActive && (
+                <span
+                  className="absolute inset-0 rounded-xl bg-primary/10"
+                  style={{ boxShadow: "var(--shadow-glow-soft)" }}
+                />
+              )}
+              <Icon size={20} className="relative" style={isActive ? { filter: "drop-shadow(0 0 6px hsl(var(--primary) / 0.7))" } : undefined} />
+              <span className="relative text-[9px] font-medium">{label}</span>
             </button>
           );
         })}
