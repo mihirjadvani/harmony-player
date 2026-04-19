@@ -303,6 +303,28 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const getAudioElement = useCallback(() => audioRef.current, []);
 
+  // Keep refs to latest navigation callbacks for the native-controls listener
+  useEffect(() => {
+    nextSongRef.current = nextSong;
+    prevSongRef.current = prevSong;
+  }, [nextSong, prevSong]);
+
+  // Sync background notification with current song / play state
+  const lastSongIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!state.currentSong) {
+      destroyNotification();
+      lastSongIdRef.current = null;
+      return;
+    }
+    if (lastSongIdRef.current !== state.currentSong.id) {
+      lastSongIdRef.current = state.currentSong.id;
+      showNotification(state.currentSong, state.isPlaying);
+    } else {
+      updatePlaybackState(state.isPlaying);
+    }
+  }, [state.currentSong, state.isPlaying]);
+
   return (
     <PlayerContext.Provider
       value={{
