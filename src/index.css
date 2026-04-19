@@ -10,74 +10,82 @@
 
 @layer base {
   :root {
-    --background: 0 0% 8%;
+    --background: 240 6% 6%;
     --foreground: 0 0% 100%;
 
-    --card: 300 4% 9%;
+    --card: 240 6% 10%;
     --card-foreground: 0 0% 100%;
 
-    --popover: 300 4% 11%;
+    --popover: 240 6% 12%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 45 100% 67%;
+    --primary: 45 100% 62%;
     --primary-foreground: 0 0% 8%;
+    --primary-glow: 48 100% 70%;
 
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 85%;
+    --secondary: 240 5% 14%;
+    --secondary-foreground: 0 0% 90%;
 
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 240 5% 14%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 72 100% 50%;
+    --accent: 48 100% 60%;
     --accent-foreground: 0 0% 8%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 45 100% 67%;
+    --border: 0 0% 100%;
+    --input: 240 5% 18%;
+    --ring: 45 100% 62%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --surface-elevated: 300 4% 13%;
-    --surface-glass: 300 4% 10%;
-    --text-secondary: 0 0% 55%;
-    --text-tertiary: 0 0% 40%;
-    --gradient-primary: linear-gradient(135deg, hsl(45, 100%, 67%), hsl(72, 100%, 50%));
-    --gradient-surface: linear-gradient(180deg, hsl(300, 4%, 12%), hsl(0, 0%, 8%));
-    --shadow-glow: 0 0 30px hsl(45 100% 67% / 0.15);
-    --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.3);
+    --surface-elevated: 240 6% 13%;
+    --surface-glass: 240 8% 12%;
+    --text-secondary: 0 0% 65%;
+    --text-tertiary: 0 0% 45%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(45, 100%, 62%), hsl(48, 100%, 75%));
+    --gradient-bg: radial-gradient(ellipse at top, hsl(240 10% 14%) 0%, hsl(240 6% 6%) 55%, hsl(0 0% 3%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(240 8% 13% / 0.7), hsl(240 6% 8% / 0.5));
+
+    --shadow-glow: 0 0 24px hsl(45 100% 62% / 0.45), 0 0 60px hsl(45 100% 62% / 0.18);
+    --shadow-glow-soft: 0 0 18px hsl(45 100% 62% / 0.25);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.45);
+    --shadow-glass: 0 8px 32px hsl(0 0% 0% / 0.35), inset 0 1px 0 hsl(0 0% 100% / 0.05);
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border/10;
+  }
+
+  html, body, #root {
+    height: 100%;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
     font-family: 'Outfit', sans-serif;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     overflow: hidden;
+    background: var(--gradient-bg);
+    background-attachment: fixed;
   }
 }
 
 .font-heading {
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 @layer utilities {
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
 
   .text-gradient {
     background: var(--gradient-primary);
@@ -86,14 +94,45 @@
     background-clip: text;
   }
 
+  /* Core glass surface */
   .glass {
-    background: hsl(var(--surface-glass) / 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: hsl(var(--surface-glass) / 0.55);
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border: 1px solid hsl(0 0% 100% / 0.06);
+    box-shadow: var(--shadow-glass);
   }
 
-  .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  .glass-card {
+    background: linear-gradient(180deg, hsl(0 0% 100% / 0.04), hsl(0 0% 100% / 0.015));
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid hsl(0 0% 100% / 0.07);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-card-active {
+    border-color: hsl(var(--primary) / 0.45);
+    box-shadow: var(--shadow-glow-soft), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+    background: linear-gradient(180deg, hsl(var(--primary) / 0.08), hsl(0 0% 100% / 0.02));
+  }
+
+  .neon-glow { box-shadow: var(--shadow-glow); }
+  .neon-glow-soft { box-shadow: var(--shadow-glow-soft); }
+
+  .neon-text {
+    color: hsl(var(--primary));
+    text-shadow: 0 0 12px hsl(var(--primary) / 0.55);
+  }
+
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  .ring-neon {
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.4),
+      0 0 18px hsl(var(--primary) / 0.35),
+      0 0 40px hsl(var(--primary) / 0.18);
   }
 }
 
@@ -103,13 +142,18 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(45 100% 67% / 0.2); }
-  50% { box-shadow: 0 0 40px hsl(45 100% 67% / 0.4); }
+  0%, 100% { box-shadow: 0 0 18px hsl(var(--primary) / 0.35), 0 0 40px hsl(var(--primary) / 0.15); }
+  50%      { box-shadow: 0 0 28px hsl(var(--primary) / 0.6),  0 0 70px hsl(var(--primary) / 0.28); }
 }
 
 @keyframes spin-slow {
@@ -122,14 +166,14 @@
   to { transform: rotate(360deg); }
 }
 
-.animate-disc-spin {
-  animation: disc-spin 8s linear infinite;
+@keyframes eq-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
 }
 
-.animate-slide-up {
-  animation: slide-up 0.35s ease-out;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
+.animate-disc-spin { animation: disc-spin 8s linear infinite; }
+.animate-slide-up { animation: slide-up 0.35s ease-out; }
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-scale-in { animation: scale-in 0.25s ease-out; }
+.animate-pulse-glow { animation: pulse-glow 2.4s ease-in-out infinite; }
+.animate-eq-bar { animation: eq-bar 0.9s ease-in-out infinite; transform-origin: bottom; }
