@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
 import { Song, PlayerState, RepeatMode } from "@/types/music";
+import {
+  showNotification,
+  updatePlaybackState,
+  destroyNotification,
+  subscribeControls,
+} from "@/services/backgroundAudio";
 
 interface PlayerContextType extends PlayerState {
   playSong: (song: Song, queue?: Song[]) => void;
