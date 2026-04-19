@@ -4,7 +4,8 @@ import { useFavorites } from "@/context/FavoritesContext";
 import DiscPlayer from "@/components/DiscPlayer";
 import SongItem from "@/components/SongItem";
 import SongOptionsMenu from "@/components/SongOptionsMenu";
-import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, MoreHorizontal, Disc3 } from "lucide-react";
+import VolumeKnob from "@/components/VolumeKnob";
+import { Play, Pause, SkipBack, SkipForward, Shuffle, Repeat, Repeat1, Heart, MoreHorizontal, Disc3, ChevronDown, Volume2 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
 const formatTime = (seconds: number) => {
@@ -20,12 +21,30 @@ const NowPlayingPage = () => {
   } = usePlayer();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showVolume, setShowVolume] = useState(false);
 
   const cycleRepeat = () => {
     const modes: Array<"off" | "all" | "one"> = ["off", "all", "one"];
     const idx = modes.indexOf(repeat);
     setRepeatMode(modes[(idx + 1) % modes.length]);
   };
+
+  if (showVolume) {
+    return (
+      <div className="flex flex-col h-full px-6 pt-2 pb-safe">
+        <div className="flex items-center justify-between mb-6">
+          <button onClick={() => setShowVolume(false)} className="p-2 -ml-2">
+            <ChevronDown size={24} className="text-foreground" />
+          </button>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest">Volume Control</p>
+          <div className="w-10" />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <VolumeKnob size={180} />
+        </div>
+      </div>
+    );
+  }
 
   if (!currentSong) {
     return (
@@ -106,6 +125,17 @@ const NowPlayingPage = () => {
         </button>
         <button onClick={cycleRepeat} className={`p-2 ${repeat !== "off" ? "text-primary" : "text-muted-foreground"}`}>
           {repeat === "one" ? <Repeat1 size={18} /> : <Repeat size={18} />}
+        </button>
+      </div>
+
+      {/* Volume button */}
+      <div className="flex justify-center mb-4">
+        <button
+          onClick={() => setShowVolume(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/60 text-muted-foreground active:scale-95 transition-transform"
+        >
+          <Volume2 size={16} />
+          <span className="text-xs font-medium">Volume</span>
         </button>
       </div>
 
