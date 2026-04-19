@@ -124,6 +124,48 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
+  // Refs so a single, persistent native-controls listener can call latest fns
+  const nextSongRef = useRef<() => void>();
+  const prevSongRef = useRef<() => void>();
+
+  // Subscribe to native lock-screen / notification controls (Android)
+  useEffect(() => {
+    let unsub: undefined | (() => void);
+    subscribeControls((action) => {
+      const audio = audioRef.current;
+      switch (action) {
+        case "music-controls-headset-unplugged":
+          if (audio) audio.pause();
+          setState((p) => ({ ...p, isPlaying: false }));
+          break;
+        case "music-controls-play":
+        case "music-controls-pause":
+        case "music-controls-toggle-play-pause":
+          if (!audio) return;
+          setState((prev) => {
+            if (prev.isPlaying) audio.pause();
+            else audio.play().catch(console.error);
+            return { ...prev, isPlaying: !prev.isPlaying };
+          });
+          break;
+        case "music-controls-next":
+          nextSongRef.current?.();
+          break;
+        case "music-controls-previous":
+          prevSongRef.current?.();
+          break;
+        case "music-controls-destroy":
+          audio?.pause();
+          setState((p) => ({ ...p, isPlaying: false }));
+          break;
+      }
+    }).then((u) => { unsub = u; });
+    return () => {
+      unsub?.();
+      destroyNotification();
+    };
+  }, []);
+
   const playSong = useCallback((song: Song, queue?: Song[]) => {
     const audio = audioRef.current;
     if (!audio) return;
