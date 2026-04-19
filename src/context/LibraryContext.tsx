@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { Song } from "@/types/music";
 import { scanDeviceForMusic, isNativePlatform, ScanProgress } from "@/services/musicScanner";
 import { parseAudioFiles, openAudioFilePicker, openFolderPicker } from "@/services/webFilePicker";
+import { isNativeAndroid, pickAudioFilesNative, pickAudioFolderNative } from "@/services/nativeFilePicker";
 
 interface LibraryContextType {
   songs: Song[];
@@ -49,58 +50,71 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, [isNative]);
 
-  // Web: pick individual files
+  // Pick individual files (Android: system document picker, Web: file input)
   const addFilesFromPC = useCallback(async () => {
-    const files = await openAudioFilePicker();
-    if (!files || files.length === 0) return;
-
     setIsScanning(true);
-    setScanProgress({ phase: "extracting", current: 0, total: files.length });
+    setScanProgress({ phase: "extracting", current: 0, total: 0 });
 
     try {
-      const newSongs = await parseAudioFiles(files, (current, total, fileName) => {
-        setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
-      });
-      setSongs((prev) => [...prev, ...newSongs]);
+      if (isNativeAndroid()) {
+        const newSongs = await pickAudioFilesNative((current, total, fileName) => {
+          setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
+        });
+        setSongs((prev) => [...prev, ...newSongs]);
+      } else {
+        const files = await openAudioFilePicker();
+        if (!files || files.length === 0) return;
+        setScanProgress({ phase: "extracting", current: 0, total: files.length });
+        const newSongs = await parseAudioFiles(files, (current, total, fileName) => {
+          setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
+        });
+        setSongs((prev) => [...prev, ...newSongs]);
+      }
     } catch (err) {
-      console.error("File parsing failed:", err);
+      console.error("File picking failed:", err);
     } finally {
       setIsScanning(false);
       setScanProgress(null);
     }
   }, []);
 
-  // Web: pick entire folder
+  // Pick entire folder (Android: document tree, Web: webkitdirectory)
   const addFolderFromPC = useCallback(async () => {
-    const files = await openFolderPicker();
-    if (!files || files.length === 0) return;
-
-    // Filter audio files from the folder
-    const audioExts = [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma", ".opus", ".webm"];
-    const audioFiles: File[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const f = files[i];
-      if (audioExts.some((ext) => f.name.toLowerCase().endsWith(ext))) {
-        audioFiles.push(f);
-      }
-    }
-
-    if (audioFiles.length === 0) return;
-
-    // Create a synthetic FileList-like structure
-    const dt = new DataTransfer();
-    audioFiles.forEach((f) => dt.items.add(f));
-
     setIsScanning(true);
-    setScanProgress({ phase: "scanning", current: 0, total: audioFiles.length });
+    setScanProgress({ phase: "scanning", current: 0, total: 0 });
 
     try {
+      if (isNativeAndroid()) {
+        const newSongs = await pickAudioFolderNative((current, total, fileName) => {
+          setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
+        });
+        setSongs((prev) => [...prev, ...newSongs]);
+        return;
+      }
+
+      const files = await openFolderPicker();
+      if (!files || files.length === 0) return;
+
+      const audioExts = [".mp3", ".wav", ".aac", ".flac", ".ogg", ".m4a", ".wma", ".opus", ".webm"];
+      const audioFiles: File[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        if (audioExts.some((ext) => f.name.toLowerCase().endsWith(ext))) {
+          audioFiles.push(f);
+        }
+      }
+      if (audioFiles.length === 0) return;
+
+      const dt = new DataTransfer();
+      audioFiles.forEach((f) => dt.items.add(f));
+
+      setScanProgress({ phase: "scanning", current: 0, total: audioFiles.length });
       const newSongs = await parseAudioFiles(dt.files, (current, total, fileName) => {
         setScanProgress({ phase: "extracting", current, total, currentFile: fileName });
       });
       setSongs((prev) => [...prev, ...newSongs]);
     } catch (err) {
-      console.error("Folder parsing failed:", err);
+      console.error("Folder picking failed:", err);
     } finally {
       setIsScanning(false);
       setScanProgress(null);
