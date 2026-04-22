@@ -127,17 +127,21 @@ function getAudioDuration(src: string): Promise<number> {
  * Open a file picker dialog for audio files.
  * Returns the FileList or null if cancelled.
  */
-export function openAudioFilePicker(): Promise<FileList | null> {
+export const openAudioFilePicker = (): Promise<FileList | null> => {
   return new Promise((resolve) => {
     const input = document.createElement("input");
+
     input.type = "file";
+    input.accept = "audio/*"; // ✅ CRITICAL FIX
     input.multiple = true;
-    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm";
-    input.onchange = () => resolve(input.files);
-    input.oncancel = () => resolve(null);
+
+    input.onchange = () => {
+      resolve(input.files);
+    };
+
     input.click();
   });
-}
+};
 
 /**
  * Open a folder picker (if supported) for scanning entire folders.
