@@ -71,9 +71,9 @@ const LibraryPage = () => {
     <div className="flex flex-col h-full">
       <div className="px-4 pt-2 pb-3">
         <div className="flex items-center justify-between mb-3">
-<h1 className="text-3xl font-bold text-white tracking-wide">
+<h2 className="text-3xl font-bold text-white tracking-wide">
   Library
-</h1>
+</h2>
           <div className="flex gap-2">
             <button
               onClick={addFilesFromPC}
