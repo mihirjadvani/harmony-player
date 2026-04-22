@@ -134,17 +134,18 @@ export function openAudioFilePicker(): Promise<FileList | null> {
     input.type = "file";
     input.multiple = true;
 
-    // ✅ STRONGEST POSSIBLE FILTER
+    // ✅ Strong restriction to audio extensions
     input.accept = ".mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus";
 
-    // ❌ Disable camera capture (important)
-    input.setAttribute("capture", "false");
+    // ❌ IMPORTANT: Prevent camera from opening directly
+    input.removeAttribute("capture");
 
     input.onchange = () => {
       if (!input.files) return resolve(null);
 
-      // ✅ HARD FILTER (only audio allowed)
+      // ✅ HARD FILTER: only allow audio files
       const audioFiles = Array.from(input.files).filter(file =>
+        file.type.startsWith("audio") ||
         file.name.match(/\.(mp3|wav|aac|flac|ogg|m4a|wma|opus)$/i)
       );
 
@@ -155,6 +156,8 @@ export function openAudioFilePicker(): Promise<FileList | null> {
 
       resolve(dt.files);
     };
+
+    input.oncancel = () => resolve(null);
 
     input.click();
   });
