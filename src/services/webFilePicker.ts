@@ -127,38 +127,67 @@ function getAudioDuration(src: string): Promise<number> {
  * Open a file picker dialog for audio files.
  * Returns the FileList or null if cancelled.
  */
-export const openAudioFilePicker = (): Promise<FileList | null> => {
+export function openAudioFilePicker(): Promise<FileList | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
 
     input.type = "file";
-    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm"; // ✅ CRITICAL FIX
     input.multiple = true;
 
+    // ✅ STRONGEST POSSIBLE FILTER
+    input.accept = ".mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus";
+
+    // ❌ Disable camera capture (important)
+    input.setAttribute("capture", "false");
+
     input.onchange = () => {
-      resolve(input.files);
+      if (!input.files) return resolve(null);
+
+      // ✅ HARD FILTER (only audio allowed)
+      const audioFiles = Array.from(input.files).filter(file =>
+        file.name.match(/\.(mp3|wav|aac|flac|ogg|m4a|wma|opus)$/i)
+      );
+
+      if (audioFiles.length === 0) return resolve(null);
+
+      const dt = new DataTransfer();
+      audioFiles.forEach(f => dt.items.add(f));
+
+      resolve(dt.files);
     };
 
     input.click();
   });
-};
+}
 
 /**
  * Open a folder picker (if supported) for scanning entire folders.
  */
-export const openFolderPicker = (): Promise<FileList | null> => {
+export function openFolderPicker(): Promise<FileList | null> {
   return new Promise((resolve) => {
     const input = document.createElement("input");
 
     input.type = "file";
-    input.webkitdirectory = true;
     input.multiple = true;
-    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm"; // ✅ IMPORTANT ADD
+    (input as any).webkitdirectory = true;
+
+    input.accept = ".mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus";
 
     input.onchange = () => {
-      resolve(input.files);
+      if (!input.files) return resolve(null);
+
+      const audioFiles = Array.from(input.files).filter(file =>
+        file.name.match(/\.(mp3|wav|aac|flac|ogg|m4a|wma|opus)$/i)
+      );
+
+      if (audioFiles.length === 0) return resolve(null);
+
+      const dt = new DataTransfer();
+      audioFiles.forEach(f => dt.items.add(f));
+
+      resolve(dt.files);
     };
 
     input.click();
   });
-};
+}
