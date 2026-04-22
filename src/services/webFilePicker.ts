@@ -132,7 +132,7 @@ export const openAudioFilePicker = (): Promise<FileList | null> => {
     const input = document.createElement("input");
 
     input.type = "file";
-    input.accept = "audio/*"; // ✅ CRITICAL FIX
+    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm"; // ✅ CRITICAL FIX
     input.multiple = true;
 
     input.onchange = () => {
@@ -146,22 +146,19 @@ export const openAudioFilePicker = (): Promise<FileList | null> => {
 /**
  * Open a folder picker (if supported) for scanning entire folders.
  */
-export function openFolderPicker(): Promise<FileList | null> {
+export const openFolderPicker = (): Promise<FileList | null> => {
   return new Promise((resolve) => {
     const input = document.createElement("input");
+
     input.type = "file";
+    input.webkitdirectory = true;
     input.multiple = true;
-    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm";
-    (input as any).webkitdirectory = true;
+    input.accept = "audio/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.wma,.opus,.webm"; // ✅ IMPORTANT ADD
+
     input.onchange = () => {
-      // Filter to only audio files
-      if (input.files) {
-        resolve(input.files);
-      } else {
-        resolve(null);
-      }
+      resolve(input.files);
     };
-    input.oncancel = () => resolve(null);
+
     input.click();
   });
-}
+};
