@@ -37,7 +37,10 @@ const InnerApp = () => {
 
         {/* App Header */}
         <header className="relative px-4 pt-4 pb-2 flex items-center justify-center">
-          <h4 className="text-4xl font-Victory Striker Sans text-yellow-400 tracking-wide">
+         <h4
+  className="text-4xl text-yellow-400 tracking-wide"
+  style={{ fontFamily: "VictoryStriker" }}
+>
   Harmony Player
 </h4>
         </header>
