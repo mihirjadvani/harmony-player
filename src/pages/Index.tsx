@@ -37,7 +37,13 @@ const InnerApp = () => {
 
         {/* App Header */}
         <header className="relative px-4 pt-4 pb-2 flex items-center justify-center">
-         <h3 className="text-4xl font-extrabold text-yellow-400 tracking-wide">
+         <h3
+  className="text-3xl text-yellow-400 tracking-widest"
+  style={{
+    fontFamily: "GreaterTheory", // or your eroded font name
+    letterSpacing: "2px"
+  }}
+>
   Harmony Player
 </h3>
         </header>
