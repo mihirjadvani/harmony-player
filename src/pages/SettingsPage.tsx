@@ -1,23 +1,15 @@
 import { useState } from "react";
 import {
-  Info,
-  Moon,
   Volume2,
   FolderSearch,
   Loader2,
   FilePlus,
   FolderOpen,
-  Trash2,
-  TimerOff,
-  Palette,
-  SlidersHorizontal,
-  Music2,
 } from "lucide-react";
 
 import { useLibrary } from "@/context/LibraryContext";
 import { useSleepTimer } from "@/context/SleepTimerContext";
 import { useEqualizer } from "@/context/EqualizerContext";
-import { useTheme } from "@/context/ThemeContext";
 
 const TIMER_OPTIONS = [5, 10, 15, 30, 60];
 
@@ -39,7 +31,6 @@ const NeonToggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
 );
 
 type Quality = "Auto" | "High" | "Standard";
-type ThemeType = "dark" | "light" | "auto"; // ✅ FIXED
 
 const SettingsPage = () => {
   const {
@@ -63,8 +54,6 @@ const SettingsPage = () => {
     isEnabled: eqEnabled,
     toggleEnabled: toggleEq,
   } = useEqualizer();
-
-  const { theme, setTheme } = useTheme(); // ✅ global theme
 
   const [showTimerPicker, setShowTimerPicker] = useState(false);
   const [quality, setQuality] = useState<Quality>("Auto");
@@ -157,33 +146,6 @@ const SettingsPage = () => {
             </div>
           </button>
         )}
-      </div>
-
-      {/* APPEARANCE */}
-      <div className="glass-card p-2 mb-4">
-        <p className="px-2 pb-2 text-[10px] uppercase tracking-widest text-primary/80">
-          Appearance
-        </p>
-
-        <div className="flex items-center justify-between p-3">
-          <p className="text-sm text-foreground">Theme</p>
-
-          <div className="flex gap-1 p-1 rounded-full glass-card">
-            {(["dark", "light", "auto"] as ThemeType[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTheme(t)}
-                className={`px-3 py-1 text-xs rounded-full ${
-                  theme === t
-                    ? "bg-primary text-primary-foreground neon-glow-soft"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* AUDIO */}
