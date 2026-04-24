@@ -39,13 +39,32 @@ const NeonToggle = ({ on, onClick }: { on: boolean; onClick: () => void }) => (
 );
 
 type Quality = "Auto" | "High" | "Standard";
-type ThemeType = "Dark" | "Light" | "Auto";
+type ThemeType = "dark" | "light" | "auto"; // ✅ FIXED
 
 const SettingsPage = () => {
-  const { songs, isScanning, addFilesFromPC, addFolderFromPC, clearLibrary, isNative, rescan } = useLibrary();
-  const { activeMinutes, remainingSeconds, startTimer, cancelTimer } = useSleepTimer();
-  const { isEnabled: eqEnabled, toggleEnabled: toggleEq } = useEqualizer();
-  const { theme, setTheme } = useTheme(); // ✅ using global theme
+  const {
+    songs,
+    isScanning,
+    addFilesFromPC,
+    addFolderFromPC,
+    clearLibrary,
+    isNative,
+    rescan,
+  } = useLibrary();
+
+  const {
+    activeMinutes,
+    remainingSeconds,
+    startTimer,
+    cancelTimer,
+  } = useSleepTimer();
+
+  const {
+    isEnabled: eqEnabled,
+    toggleEnabled: toggleEq,
+  } = useEqualizer();
+
+  const { theme, setTheme } = useTheme(); // ✅ global theme
 
   const [showTimerPicker, setShowTimerPicker] = useState(false);
   const [quality, setQuality] = useState<Quality>("Auto");
@@ -71,6 +90,7 @@ const SettingsPage = () => {
   return (
     <div className="flex flex-col h-full px-4 pt-4 overflow-y-auto scrollbar-hide">
       
+      {/* HEADER */}
       <h1 className="text-2xl font-bold text-foreground mb-5 font-heading">
         Settings
       </h1>
@@ -90,8 +110,12 @@ const SettingsPage = () => {
             <FilePlus size={18} className="text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">Add Audio Files</p>
-            <p className="text-xs text-muted-foreground">Select individual files</p>
+            <p className="text-sm font-medium text-foreground">
+              Add Audio Files
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Select individual files
+            </p>
           </div>
         </button>
 
@@ -104,8 +128,12 @@ const SettingsPage = () => {
             <FolderOpen size={18} className="text-primary" />
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">Add Music Folder</p>
-            <p className="text-xs text-muted-foreground">Scan entire folder</p>
+            <p className="text-sm font-medium text-foreground">
+              Add Music Folder
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Scan entire folder
+            </p>
           </div>
         </button>
 
@@ -131,7 +159,7 @@ const SettingsPage = () => {
         )}
       </div>
 
-      {/* THEME */}
+      {/* APPEARANCE */}
       <div className="glass-card p-2 mb-4">
         <p className="px-2 pb-2 text-[10px] uppercase tracking-widest text-primary/80">
           Appearance
@@ -141,7 +169,7 @@ const SettingsPage = () => {
           <p className="text-sm text-foreground">Theme</p>
 
           <div className="flex gap-1 p-1 rounded-full glass-card">
-            {(["Dark", "Light", "Auto"] as ThemeType[]).map((t) => (
+            {(["dark", "light", "auto"] as ThemeType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTheme(t)}
@@ -151,7 +179,7 @@ const SettingsPage = () => {
                     : "text-muted-foreground"
                 }`}
               >
-                {t}
+                {t.charAt(0).toUpperCase() + t.slice(1)}
               </button>
             ))}
           </div>
