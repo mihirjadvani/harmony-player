@@ -38,11 +38,9 @@ const InnerApp = () => {
         {/* App Header */}
         <header className="relative px-4 pt-4 pb-2 flex items-center justify-center">
         <h3
-  className="text-3xl text-yellow-400 tracking-widest"
+  className="text-3xl font-bold text-yellow-400 tracking-wide"
   style={{
-    fontFamily: "GreaterTheory",
-    letterSpacing: "3px",
-    textShadow: "0 0 6px rgba(255, 215, 0, 0.8), 0 0 12px rgba(255, 215, 0, 0.6)"
+    textShadow: "0 0 6px rgba(255, 215, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.4)"
   }}
 >
   Harmony Player
